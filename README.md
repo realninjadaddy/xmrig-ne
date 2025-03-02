@@ -1,10 +1,10 @@
 # XMRig-NE (Ninja Edition)
 
-[![GitHub release](https://img.shields.io/github/release/realninjadaddy/xmrig/all.svg)](https://github.com/realninjadaddy/xmrig/releases)
-[![GitHub Release Date](https://img.shields.io/github/release-date/realninjadaddy/xmrig.svg)](https://github.com/realninjadaddy/xmrig/releases)
-[![GitHub license](https://img.shields.io/github/license/realninjadaddy/xmrig.svg)](https://github.com/realninjadaddy/xmrig/blob/master/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/realninjadaddy/xmrig.svg)](https://github.com/realninjadaddy/xmrig/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/realninjadaddy/xmrig.svg)](https://github.com/realninjadaddy/xmrig/network)
+[![GitHub release](https://img.shields.io/github/release/realninjadaddy/xmrig-ne/all.svg)](https://github.com/realninjadaddy/xmrig-ne/releases)
+[![GitHub Release Date](https://img.shields.io/github/release-date/realninjadaddy/xmrig-ne.svg)](https://github.com/realninjadaddy/xmrig-ne/releases)
+[![GitHub license](https://img.shields.io/github/license/realninjadaddy/xmrig-ne.svg)](https://github.com/realninjadaddy/xmrig-ne/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/realninjadaddy/xmrig-ne.svg)](https://github.com/realninjadaddy/xmrig-ne/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/realninjadaddy/xmrig-ne.svg)](https://github.com/realninjadaddy/xmrig-ne/network)
 
 XMRig is a high performance, open source, cross platform RandomX, KawPow, CryptoNight and GhostRider unified CPU/GPU miner and RandomX. Official binaries are available for Windows, Linux, macOS and FreeBSD.
 
