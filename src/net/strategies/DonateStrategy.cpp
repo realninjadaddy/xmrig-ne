@@ -1,6 +1,7 @@
 /* XMRig
  * Copyright (c) 2018-2023 SChernykh   <https://github.com/SChernykh>
  * Copyright (c) 2016-2023 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2025-2025 NinjaDaddy  <https://github.com/realninjadaddy/xmrig-ne>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
