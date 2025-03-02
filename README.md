@@ -15,6 +15,9 @@ This is a modified version of XMRig 6.22.2, forked from the official repository.
 - **OpenCL** for AMD GPUs.
 - **CUDA** for NVIDIA GPUs via external [CUDA plugin](https://github.com/xmrig/xmrig-cuda).
 
+## Docker images
+Visit https://hub.docker.com/u/ninjadaddy for dockerimages to various crypto coins
+
 ## Donations
 * Default donation 1% (1 minute in 100 minutes) can be increased via option `donate-level` or disabled in source code.
 * XMR: `42U9Utkg9ZhdyzMpKKKxUshUSXPqzu4dy4mHwGHxreZZE9kfrbairnTW71gARYztvzceiSUgz7PVWPNK4ToSNsTyPAnDb5P`

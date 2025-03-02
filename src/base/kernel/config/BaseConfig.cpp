@@ -142,6 +142,14 @@ void xmrig::BaseConfig::printVersions()
     snprintf(buf, sizeof buf, "MSVC/%d", MSVC_VERSION);
 #   endif
 
+
+    Log::print(GREEN_BOLD(" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"));
+    Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") GREEN_BOLD("%s") WHITE_BOLD(" %s"), "SPECIAL", "XMRig-NE", "(Ninja Edition) - https://github.com/realninjadaddy/xmrig-ne" GREEN_BOLD("                *"));
+    Log::print(GREEN_BOLD(" * ") WHITE_BOLD("INFO         This is a modified version of XMRig 6.22.2, forked from the official repository.") GREEN_BOLD("     *"));
+    Log::print(GREEN_BOLD(" * ") WHITE_BOLD("             This project is not affiliated with or endorsed by the original XMRig developers.") GREEN_BOLD("    *"));
+    Log::print(GREEN_BOLD(" * ") WHITE_BOLD("             The code remains licensed under GPL v3 and released to public           ") GREEN_BOLD("             *"));
+    Log::print(GREEN_BOLD(" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"));
+
     Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") CYAN_BOLD("%s/%s") WHITE_BOLD(" %s") WHITE_BOLD(" (built for %s") WHITE_BOLD(" %s,") WHITE_BOLD(" %s)"), "ABOUT", APP_NAME, APP_VERSION, buf, APP_OS, APP_ARCH, APP_BITS);
 
     std::string libs;
