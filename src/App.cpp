@@ -77,12 +77,15 @@ int xmrig::App::exec()
         const auto& dashboard = doc["dashboard"];
 
         if (dashboard.HasMember("enabled") && dashboard["enabled"].GetBool()) {
-            const std::string url    = dashboard.HasMember("url")    ? dashboard["url"].GetString()    : "";
-            const std::string secret = dashboard.HasMember("secret") ? dashboard["secret"].GetString() : "";
-            const std::string rigId  = "xmrig-ne"; // fallback – evt. hardcode eller parse fra config senere
 
+            std::string url = "ws://127.0.0.1:4000/ws";
+            std::string secret = "abc123";
+            std::string rigId = "xmrig-test";
             if (!url.empty()) {
-                std::cout << "[DEBUG] Klar til at starte WsClient" << std::endl;
+                std::cout << "[DEBUG] Starting WsClient with:" << std::endl;
+                std::cout << "  URL:    " << url << std::endl;
+                std::cout << "  Secret: " << secret << std::endl;
+                std::cout << "  Rig ID: " << rigId << std::endl;
                 xmrig::WsClient::start(url, secret, rigId);
             }
         }

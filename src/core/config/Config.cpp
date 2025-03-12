@@ -310,7 +310,7 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
     doc.AddMember(StringRef(kPauseOnActive),            (d_ptr->idleTime == 0U || d_ptr->idleTime == kIdleTime) ? Value(isPauseOnActive()) : Value(d_ptr->idleTime), allocator);
 }
 
-class DocReader : public IJsonReader {
+class DocReader : public xmrig::IJsonReader {
 public:
     explicit DocReader(rapidjson::Document &doc) : m_doc(doc) {}
 
@@ -385,9 +385,6 @@ private:
 
 bool xmrig::Config::read(const IJsonReader &reader, const char *fileName, BaseTransform &transform)
 {
-    // Brug getValue(nullptr) til at få hele JSON-rooten
-    const auto& root = reader.getValue(nullptr);
-
     // Opret ny Document og kopiér indholdet fra root
     rapidjson::Document doc;
     doc.CopyFrom(reader.getValue(nullptr), doc.GetAllocator());

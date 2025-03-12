@@ -66,6 +66,7 @@ set(HEADERS
     src/net/JobResult.h
     src/net/JobResults.h
     src/net/Network.h
+    src/base/net/ws/WsClient.h
     src/net/strategies/DonateStrategy.h
     src/Summary.h
     src/version.h
@@ -113,6 +114,7 @@ set(SOURCES
     src/core/Taskbar.cpp
     src/net/JobResults.cpp
     src/net/Network.cpp
+    src/base/net/ws/WsClient.cpp
     src/net/strategies/DonateStrategy.cpp
     src/Summary.cpp
     src/xmrig.cpp
@@ -231,6 +233,8 @@ include(src/hw/dmi/dmi.cmake)
 include_directories(src)
 include_directories(src/3rdparty)
 include_directories(${UV_INCLUDE_DIR})
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/base/net/ws)
 
 if (WITH_DEBUG_LOG)
     add_definitions(/DAPP_DEBUG)
