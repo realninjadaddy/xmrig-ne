@@ -126,7 +126,9 @@ private:
 
         ConfigTransform::load(chain, process, transform);
 
-        if (read(chain, config)) {
+        config = std::unique_ptr<Config>(new Config());
+
+        if (config->read(chain, chain.fileName(), transform)) {
             return config.release();
         }
 

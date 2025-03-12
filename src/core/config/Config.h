@@ -26,6 +26,7 @@
 #include "3rdparty/rapidjson/fwd.h"
 #include "backend/cpu/CpuConfig.h"
 #include "base/kernel/config/BaseConfig.h"
+#include "base/kernel/config/BaseTransform.h"
 #include "base/tools/Object.h"
 
 
@@ -98,6 +99,7 @@ public:
 
     bool isShouldSave() const;
     bool read(const IJsonReader &reader, const char *fileName) override;
+    bool read(const IJsonReader &reader, const char *fileName, BaseTransform &transform);
     void getJSON(rapidjson::Document &doc) const override;
 
 private:

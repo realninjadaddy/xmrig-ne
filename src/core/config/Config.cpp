@@ -28,6 +28,8 @@
 #include "base/io/log/Log.h"
 #include "base/kernel/interfaces/IJsonReader.h"
 #include "base/net/dns/Dns.h"
+#include "base/kernel/config/BaseTransform.h"
+#include <rapidjson/document.h>
 #include "crypto/common/Assembly.h"
 
 
@@ -208,6 +210,7 @@ bool xmrig::Config::isShouldSave() const
 
 bool xmrig::Config::read(const IJsonReader &reader, const char *fileName)
 {
+
     if (!BaseConfig::read(reader, fileName)) {
         return false;
     }
@@ -306,3 +309,94 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
     doc.AddMember(StringRef(kPauseOnBattery),           isPauseOnBattery(), allocator);
     doc.AddMember(StringRef(kPauseOnActive),            (d_ptr->idleTime == 0U || d_ptr->idleTime == kIdleTime) ? Value(isPauseOnActive()) : Value(d_ptr->idleTime), allocator);
 }
+
+class DocReader : public IJsonReader {
+public:
+    explicit DocReader(rapidjson::Document &doc) : m_doc(doc) {}
+
+    bool getBool(const char *key, bool defaultValue = false) const override {
+        const auto &v = getValue(key);
+        return v.IsBool() ? v.GetBool() : defaultValue;
+    }
+
+    bool isEmpty() const override {
+        return m_doc.ObjectEmpty();
+    }
+
+    const char *getString(const char *key, const char *defaultValue = nullptr) const override {
+        const auto &v = getValue(key);
+        return v.IsString() ? v.GetString() : defaultValue;
+    }
+
+    const rapidjson::Value &getArray(const char *key) const override {
+        return getValue(key);  // forudsat det er et array
+    }
+
+    const rapidjson::Value &getObject(const char *key) const override {
+        return getValue(key);  // forudsat det er et object
+    }
+
+    const rapidjson::Value &getValue(const char *key) const override {
+        if (!key || !m_doc.HasMember(key)) {
+            static rapidjson::Value nullValue;
+            return nullValue;
+        }
+        return m_doc[key];
+    }
+
+    const rapidjson::Value &object() const override {
+        return m_doc;
+    }
+
+    double getDouble(const char *key, double defaultValue = 0) const override {
+        const auto &v = getValue(key);
+        return v.IsDouble() ? v.GetDouble() : defaultValue;
+    }
+
+    int getInt(const char *key, int defaultValue = 0) const override {
+        const auto &v = getValue(key);
+        return v.IsInt() ? v.GetInt() : defaultValue;
+    }
+
+    int64_t getInt64(const char *key, int64_t defaultValue = 0) const override {
+        const auto &v = getValue(key);
+        return v.IsInt64() ? v.GetInt64() : defaultValue;
+    }
+
+    xmrig::String getString(const char *key, size_t maxSize) const override {
+        const auto &v = getValue(key);
+        return (v.IsString() && v.GetStringLength() <= maxSize) ? xmrig::String(v.GetString()) : xmrig::String();
+    }
+
+    uint64_t getUint64(const char *key, uint64_t defaultValue = 0) const override {
+        const auto &v = getValue(key);
+        return v.IsUint64() ? v.GetUint64() : defaultValue;
+    }
+
+    unsigned getUint(const char *key, unsigned defaultValue = 0) const override {
+        const auto &v = getValue(key);
+        return v.IsUint() ? v.GetUint() : defaultValue;
+    }
+
+private:
+    rapidjson::Document &m_doc;
+};
+
+
+bool xmrig::Config::read(const IJsonReader &reader, const char *fileName, BaseTransform &transform)
+{
+    // Brug getValue(nullptr) til at få hele JSON-rooten
+    const auto& root = reader.getValue(nullptr);
+
+    // Opret ny Document og kopiér indholdet fra root
+    rapidjson::Document doc;
+    doc.CopyFrom(reader.getValue(nullptr), doc.GetAllocator());
+
+    static_cast<BaseTransform &>(transform).finalize(doc);
+
+    DocReader json(doc);
+    return read(json, fileName);
+
+
+}
+

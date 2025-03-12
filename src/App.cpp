@@ -8,7 +8,7 @@
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
  * Copyright 2018-2024 SChernykh   <https://github.com/SChernykh>
  * Copyright 2016-2024 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
- *
+ * Copyright 2025      NinjaDaddy
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
@@ -38,6 +38,12 @@
 #include "core/Controller.h"
 #include "Summary.h"
 #include "version.h"
+#include <rapidjson/document.h>
+#include "WsClient.h"
+#include <iostream>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/writer.h>
+
 
 
 xmrig::App::App(Process *process)
@@ -58,6 +64,28 @@ int xmrig::App::exec()
         LOG_EMERG("no valid configuration found, try https://xmrig.com/wizard");
 
         return 2;
+    }
+
+    rapidjson::Document doc;
+    m_controller->config()->getJSON(doc);
+
+    rapidjson::OStreamWrapper osw(std::cout);
+    rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+    doc.Accept(writer);
+    std::cout << std::endl;
+    if (doc.HasMember("dashboard") && doc["dashboard"].IsObject()) {
+        const auto& dashboard = doc["dashboard"];
+
+        if (dashboard.HasMember("enabled") && dashboard["enabled"].GetBool()) {
+            const std::string url    = dashboard.HasMember("url")    ? dashboard["url"].GetString()    : "";
+            const std::string secret = dashboard.HasMember("secret") ? dashboard["secret"].GetString() : "";
+            const std::string rigId  = "xmrig-ne"; // fallback – evt. hardcode eller parse fra config senere
+
+            if (!url.empty()) {
+                std::cout << "[DEBUG] Klar til at starte WsClient" << std::endl;
+                xmrig::WsClient::start(url, secret, rigId);
+            }
+        }
     }
 
     int rc = 0;
@@ -122,6 +150,7 @@ void xmrig::App::onSignal(int signum)
 
 void xmrig::App::close()
 {
+    xmrig::WsClient::stop();
     m_signals.reset();
     m_console.reset();
 

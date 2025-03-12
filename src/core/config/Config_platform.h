@@ -164,6 +164,9 @@ static const option options[] = {
 #   ifdef XMRIG_FEATURE_DMI
     { "no-dmi",                0, nullptr, IConfig::DmiKey                },
 #   endif
+    { "dash-stat-enabled", 0, nullptr, IConfig::DashStatEnabledKey },
+    { "dash-ws-url",       1, nullptr, IConfig::DashWsUrlKey },
+    { "dash-stat-secret",  1, nullptr, IConfig::DashStatSecretKey },
     { nullptr,                 0, nullptr, 0 }
 };
 

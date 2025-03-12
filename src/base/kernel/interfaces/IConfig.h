@@ -164,6 +164,13 @@ public:
         CudaLoaderKey        = 1208,
         NvmlKey              = 1209,
         HealthPrintTimeKey   = 1210,
+
+        // ninja dash
+        DashStatEnabledKey,
+        DashWsUrlKey,
+        DashStatSecretKey,
+
+
     };
 
     virtual ~IConfig() = default;

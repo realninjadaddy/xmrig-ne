@@ -23,6 +23,7 @@
 #include "base/net/stratum/Pools.h"
 #include "core/config/Config.h"
 #include "crypto/cn/CnHash.h"
+#include <iostream>
 
 
 #ifdef XMRIG_ALGO_RANDOMX
@@ -250,6 +251,21 @@ void xmrig::ConfigTransform::transform(rapidjson::Document &doc, int key, const 
     case IConfig::DmiKey: /* --no-dmi */
         return set(doc, Config::kDMI, false);
 #   endif
+
+    if (key == IConfig::DashStatEnabledKey) {
+        std::cerr << "[ConfigTransform] dash-stat-enabled FLAG MATCHED" << std::endl;
+        return set(doc, "dashboard", "enabled", true);
+    }
+
+    if (key == IConfig::DashWsUrlKey) {
+        std::cerr << "[ConfigTransform] dash-stat-url FLAG MATCHED" << std::endl;
+        return set(doc, "dashboard", "url", arg);
+    }
+
+    if (key == IConfig::DashStatSecretKey) {
+        std::cerr << "[ConfigTransform] dash-stat-secret FLAG MATCHED" << std::endl;
+        return set(doc, "dashboard", "secret", arg);
+    }
 
 #   ifdef XMRIG_FEATURE_BENCHMARK
     case IConfig::AlgorithmKey:     /* --algo */
