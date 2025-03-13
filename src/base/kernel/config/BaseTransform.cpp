@@ -270,6 +270,30 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
     case IConfig::NoTitleKey:        /* --no-title */
         return transformBoolean(doc, key, false);
 
+    
+    /* ninja edition features - start */
+    case IConfig::WSUrlKey:
+        if (!doc.HasMember("ws")) {
+            doc.AddMember("ws", rapidjson::kObjectType, doc.GetAllocator());
+        }
+        doc["ws"].AddMember("url", rapidjson::Value(arg, doc.GetAllocator()), doc.GetAllocator());
+        break;
+
+    case IConfig::WSUserKey:
+        if (!doc.HasMember("ws")) {
+            doc.AddMember("ws", rapidjson::kObjectType, doc.GetAllocator());
+        }
+        doc["ws"].AddMember("user", rapidjson::Value(arg, doc.GetAllocator()), doc.GetAllocator());
+        break;
+
+    case IConfig::WSSecretKey:
+        if (!doc.HasMember("ws")) {
+            doc.AddMember("ws", rapidjson::kObjectType, doc.GetAllocator());
+        }
+        doc["ws"].AddMember("secret", rapidjson::Value(arg, doc.GetAllocator()), doc.GetAllocator());
+        break;
+    /* ninja edition features - end */
+
     default:
         break;
     }
@@ -326,6 +350,16 @@ void xmrig::BaseTransform::transformBoolean(rapidjson::Document &doc, int key, b
     case IConfig::DnsIPv6Key: /* --dns-ipv6 */
         return set(doc, DnsConfig::kField, DnsConfig::kIPv6, enable);
 
+    
+    /* ninja edition features - start */
+    case IConfig::WSEnableKey:
+        if (!doc.HasMember("ws")) {
+            doc.AddMember("ws", rapidjson::kObjectType, doc.GetAllocator());
+        }
+        doc["ws"].AddMember("enabled", true, doc.GetAllocator());
+        break;
+    /* ninja edition features - end */
+
     default:
         break;
     }
@@ -367,6 +401,7 @@ void xmrig::BaseTransform::transformUint64(rapidjson::Document &doc, int key, ui
     case IConfig::DaemonZMQPortKey:  /* --daemon-zmq-port */
         return add(doc, Pools::kPools, Pool::kDaemonZMQPort, arg);
 #   endif
+
 
     default:
         break;

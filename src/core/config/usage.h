@@ -201,6 +201,14 @@ static inline const std::string &usage()
     u += "      --no-dmi                  disable DMI/SMBIOS reader\n";
 #   endif
 
+    /* ninja edition features - start */
+    u += "\nWebsockets:\n";
+    u += "      --ws-enable               ws enable\n";
+    u += "      --ws-url                  ws url\n";
+    u += "      --ws-secret               ws secret\n";
+    u += "      --ws-user                 ws user\n";
+    /* ninja edition features - end */
+
     return u;
 }
 

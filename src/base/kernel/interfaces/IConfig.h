@@ -164,6 +164,14 @@ public:
         CudaLoaderKey        = 1208,
         NvmlKey              = 1209,
         HealthPrintTimeKey   = 1210,
+
+        /* ninja edition */
+
+        WSEnableKey          = 2000,
+        WSUrlKey             = 2001,
+        WSSecretKey          = 2002,
+        WSUserKey            = 2003,
+
     };
 
     virtual ~IConfig() = default;

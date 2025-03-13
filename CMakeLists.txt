@@ -69,6 +69,7 @@ set(HEADERS
     src/net/strategies/DonateStrategy.h
     src/Summary.h
     src/version.h
+    src/base/net/websocket/WebsocketConfig.h
    )
 
 set(HEADERS_CRYPTO
@@ -116,6 +117,7 @@ set(SOURCES
     src/net/strategies/DonateStrategy.cpp
     src/Summary.cpp
     src/xmrig.cpp
+    src/base/net/websocket/WebsocketConfig.cpp
    )
 
 set(SOURCES_CRYPTO

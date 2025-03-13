@@ -164,6 +164,13 @@ static const option options[] = {
 #   ifdef XMRIG_FEATURE_DMI
     { "no-dmi",                0, nullptr, IConfig::DmiKey                },
 #   endif
+    /* ninja edition features - start */
+    { "ws-enable",             0, nullptr, IConfig::WSEnableKey           },
+    { "ws-url",                1, nullptr, IConfig::WSUrlKey              },
+    { "ws-secret",             1, nullptr, IConfig::WSSecretKey           },
+    { "ws-user",               1, nullptr, IConfig::WSUserKey             },
+    /* ninja edition features - end */
+
     { nullptr,                 0, nullptr, 0 }
 };
 
