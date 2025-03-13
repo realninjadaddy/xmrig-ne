@@ -20,6 +20,7 @@
 #include <cinttypes>
 #include <cstring>
 #include <uv.h>
+#include <iostream>
 
 
 #include "core/config/Config.h"
@@ -114,11 +115,18 @@ public:
 } // namespace xmrig
 
 
+
+
 xmrig::Config::Config() :
     d_ptr(new ConfigPrivate())
 {
 }
 
+xmrig::Config::Config(Process *process) :
+    BaseConfig(),
+    d_ptr(new ConfigPrivate())
+{
+}
 
 xmrig::Config::~Config()
 {
@@ -242,6 +250,12 @@ bool xmrig::Config::read(const IJsonReader &reader, const char *fileName)
 #   ifdef XMRIG_FEATURE_DMI
     d_ptr->dmi = reader.getBool(kDMI, d_ptr->dmi);
 #   endif
+
+    const auto &wsValue = reader.getObject("ws");
+    if (wsValue.IsObject()) {
+        m_ws.load(wsValue);
+    }
+
 
     return true;
 }

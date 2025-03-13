@@ -19,7 +19,7 @@
 #include "App.h"
 #include "base/kernel/Entry.h"
 #include "base/kernel/Process.h"
-
+#include <iostream>
 
 int main(int argc, char **argv)
 {
@@ -28,10 +28,12 @@ int main(int argc, char **argv)
     Process process(argc, argv);
     const Entry::Id entry = Entry::get(process);
     if (entry) {
-        return Entry::exec(process, entry);
+    //    return Entry::exec(process, entry);
     }
 
+    std::cout << "[DEBUG] Før App instantieres" << std::endl;
     App app(&process);
+    std::cout << "[DEBUG] Efter App instantieres, før exec()" << std::endl;
 
     return app.exec();
 }

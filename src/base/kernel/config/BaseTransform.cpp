@@ -17,6 +17,7 @@
  */
 
 #include <cstdio>
+#include <iostream>
 
 
 #ifdef _MSC_VER
@@ -45,6 +46,7 @@
 
 void xmrig::BaseTransform::load(JsonChain &chain, Process *process, IConfigTransform &transform)
 {
+
     using namespace rapidjson;
 
     int key     = 0;
@@ -54,7 +56,7 @@ void xmrig::BaseTransform::load(JsonChain &chain, Process *process, IConfigTrans
     Document doc(kObjectType);
 
     while (true) {
-        key = getopt_long(argc, argv, short_options, options, nullptr); // NOLINT(concurrency-mt-unsafe)
+        key = getopt_long(argc, argv, short_options, options, nullptr);
         if (key < 0) {
             break;
         }
@@ -66,7 +68,9 @@ void xmrig::BaseTransform::load(JsonChain &chain, Process *process, IConfigTrans
             doc = Document(kObjectType);
         }
         else {
-            transform.transform(doc, key, optarg);
+
+            
+            transform.transform(doc, key, optarg ? optarg : "");
         }
     }
 
@@ -76,6 +80,7 @@ void xmrig::BaseTransform::load(JsonChain &chain, Process *process, IConfigTrans
 
     transform.finalize(doc);
     chain.add(std::move(doc));
+
 }
 
 
@@ -262,7 +267,9 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
     case IConfig::DaemonKey:      /* --daemon */
     case IConfig::SubmitToOriginKey: /* --submit-to-origin */
     case IConfig::VerboseKey:     /* --verbose */
-    case IConfig::DnsIPv6Key:     /* --dns-ipv6 */
+    case IConfig::DnsIPv6Key:
+    case IConfig::WSEnableKey:
+        return transformBoolean(doc, key, true);     /* --dns-ipv6 */
         return transformBoolean(doc, key, true);
 
     case IConfig::ColorKey:          /* --no-color */
@@ -349,15 +356,13 @@ void xmrig::BaseTransform::transformBoolean(rapidjson::Document &doc, int key, b
 
     case IConfig::DnsIPv6Key: /* --dns-ipv6 */
         return set(doc, DnsConfig::kField, DnsConfig::kIPv6, enable);
+        
+    case IConfig::WSEnableKey:
+        // Brug set-funktion til at skrive enabled = true
+        return set(doc, "ws", "enabled", true);
 
     
     /* ninja edition features - start */
-    case IConfig::WSEnableKey:
-        if (!doc.HasMember("ws")) {
-            doc.AddMember("ws", rapidjson::kObjectType, doc.GetAllocator());
-        }
-        doc["ws"].AddMember("enabled", true, doc.GetAllocator());
-        break;
     /* ninja edition features - end */
 
     default:

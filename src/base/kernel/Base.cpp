@@ -35,7 +35,7 @@
 #include "core/config/Config.h"
 #include "core/config/ConfigTransform.h"
 #include "version.h"
-
+#include <iostream>
 
 #ifdef HAVE_SYSLOG_H
 #   include "base/io/log/backends/SysLog.h"
@@ -153,6 +153,7 @@ private:
         }
 #       endif
 
+
         return nullptr;
     }
 };
@@ -182,7 +183,9 @@ bool xmrig::Base::isReady() const
 
 int xmrig::Base::init()
 {
-#   ifdef XMRIG_FEATURE_API
+
+
+    #   ifdef XMRIG_FEATURE_API
     d_ptr->api = new Api(this);
     d_ptr->api->addListener(this);
 #   endif
@@ -215,6 +218,7 @@ void xmrig::Base::start()
 #   ifdef XMRIG_FEATURE_API
     api()->start();
 #   endif
+
 
     if (config()->isShouldSave()) {
         config()->save();

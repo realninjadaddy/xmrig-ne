@@ -24,6 +24,7 @@
 #include "base/kernel/interfaces/IConfig.h"
 #include "base/net/http/Http.h"
 #include "base/net/stratum/Pools.h"
+#include "base/net/websocket/WebsocketConfig.h"
 
 
 #ifdef XMRIG_FEATURE_TLS
@@ -73,6 +74,7 @@ public:
     inline const String &apiId() const                      { return m_apiId; }
     inline const String &apiWorkerId() const                { return m_apiWorkerId; }
     inline const Title &title() const                       { return m_title; }
+    inline const WebsocketConfig &websocket() const { return m_ws; }
     inline uint32_t printTime() const                       { return m_printTime; }
 
 #   ifdef XMRIG_FEATURE_TLS
@@ -104,6 +106,7 @@ protected:
     String m_userAgent;
     Title m_title;
     uint32_t m_printTime    = 60;
+    WebsocketConfig m_ws;
 
 #   ifdef XMRIG_FEATURE_TLS
     TlsConfig m_tls;

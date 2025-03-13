@@ -40,6 +40,8 @@ class Controller : public Base
 public:
     XMRIG_DISABLE_COPY_MOVE_DEFAULT(Controller)
 
+    std::shared_ptr<IConfig> createConfig() const;
+
     Controller(Process *process);
     ~Controller() override;
 

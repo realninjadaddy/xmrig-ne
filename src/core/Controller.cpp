@@ -22,6 +22,7 @@
 #include "core/Miner.h"
 #include "crypto/common/VirtualMemory.h"
 #include "net/Network.h"
+#include <iostream>
 
 
 #ifdef XMRIG_FEATURE_API
@@ -36,6 +37,8 @@
 xmrig::Controller::Controller(Process *process) :
     Base(process)
 {
+    std::cout << "[DEBUG] Inside Controller constructor\n";
+
 }
 
 
@@ -103,4 +106,9 @@ void xmrig::Controller::execCommand(char command) const
 {
     miner()->execCommand(command);
     network()->execCommand(command);
+}
+
+std::shared_ptr<xmrig::IConfig> xmrig::Controller::createConfig() const
+{
+    return std::make_shared<Config>();
 }

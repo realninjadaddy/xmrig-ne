@@ -38,11 +38,17 @@
 #include "core/Controller.h"
 #include "Summary.h"
 #include "version.h"
+#include "base/net/websocket/WebsocketClient.h"
 
 
 xmrig::App::App(Process *process)
 {
+
     m_controller = std::make_shared<Controller>(process);
+
+
+    [[maybe_unused]] const auto &ws = m_controller->config()->websocket();
+
 }
 
 
@@ -54,6 +60,8 @@ xmrig::App::~App()
 
 int xmrig::App::exec()
 {
+ 
+
     if (!m_controller->isReady()) {
         LOG_EMERG("no valid configuration found, try https://xmrig.com/wizard");
 
@@ -70,6 +78,14 @@ int xmrig::App::exec()
     rc = m_controller->init();
     if (rc != 0) {
         return rc;
+    }
+
+    const auto &ws = m_controller->config()->websocket();
+
+
+    if (ws.isEnabled()) {
+        WebsocketClient client(ws.url(), ws.user(), ws.secret());
+        client.connect();
     }
 
     if (!m_controller->isBackground()) {

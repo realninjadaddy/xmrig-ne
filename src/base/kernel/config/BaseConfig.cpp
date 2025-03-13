@@ -26,7 +26,7 @@
 #include "base/kernel/interfaces/IJsonReader.h"
 #include "base/net/dns/Dns.h"
 #include "version.h"
-
+#include <iostream>
 
 #include <algorithm>
 #include <cassert>
@@ -77,6 +77,8 @@ bool xmrig::BaseConfig::read(const IJsonReader &reader, const char *fileName)
 {
     m_fileName = fileName;
 
+    std::cout << "[DEBUG] BaseConfig::read() CALLED" << std::endl;
+
     if (reader.isEmpty()) {
         return false;
     }
@@ -105,9 +107,11 @@ bool xmrig::BaseConfig::read(const IJsonReader &reader, const char *fileName)
     }
 
     m_http.load(reader.getObject(kHttp));
-    m_pools.load(reader);
+        m_pools.load(reader);
 
     Dns::set(reader.getObject(DnsConfig::kField));
+
+    m_ws.load(reader.getObject("ws"));
 
     return m_pools.active() > 0;
 }
@@ -126,7 +130,6 @@ bool xmrig::BaseConfig::save()
         LOG_NOTICE("%s " WHITE_BOLD("configuration saved to: \"%s\""), Tags::config(), m_fileName.data());
         return true;
     }
-
     return false;
 }
 

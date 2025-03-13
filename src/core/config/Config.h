@@ -30,6 +30,7 @@
 
 
 namespace xmrig {
+class Process;
 
 
 class ConfigPrivate;
@@ -64,6 +65,7 @@ public:
 #   endif
 
     Config();
+    explicit Config(Process *process);
     ~Config() override;
 
     inline bool isPauseOnActive() const { return idleTime() > 0; }
