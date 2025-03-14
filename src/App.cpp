@@ -105,7 +105,11 @@ void xmrig::App::close()
     m_signals.reset();
     m_console.reset();
 
+    
     m_controller->stop();
 
+    if (m_wsClient) {
+        m_wsClient->stop();
+    }
     Log::destroy();
 }

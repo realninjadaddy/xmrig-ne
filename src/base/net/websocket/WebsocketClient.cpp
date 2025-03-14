@@ -75,7 +75,8 @@ void WebsocketClient::start() {
             }
         }
 
-        m_socket.stop();
+        m_socket.stop(1000, "XMRig shutting down");
+
     });
 }
 
