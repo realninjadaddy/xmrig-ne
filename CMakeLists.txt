@@ -248,6 +248,17 @@ if (WITH_DEBUG_LOG)
     add_definitions(/DAPP_DEBUG)
 endif()
 
+set(HEADERS
+    ${HEADERS}
+    src/base/net/websocket/WebsocketCommandHandler.h
+)
+
+set(SOURCES
+    ${SOURCES}
+    src/base/net/websocket/WebsocketCommandHandler.cpp
+)
+
+
 find_package(Threads REQUIRED)
 add_compile_options(-std=c++14)
 

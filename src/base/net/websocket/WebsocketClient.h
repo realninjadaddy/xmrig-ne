@@ -3,16 +3,18 @@
 #include <string>
 #include <atomic>
 #include <thread>
+#include <functional>
 #include <ixwebsocket/IXWebSocket.h>
 
 namespace xmrig {
 
+class Controller; // Fremad-deklaration
 class WebsocketClient {
 public:
-    WebsocketClient(const std::string &url,
+    WebsocketClient(Controller *controller,
+                    const std::string &url,
                     const std::string &user = {},
                     const std::string &secret = {});
-
     ~WebsocketClient();
 
     void start();
@@ -23,8 +25,12 @@ public:
     bool isConnected() const;
     void sendStats(double h10s, double h60s, double h15m, uint64_t uptime);
 
+    // NYT
+    void setOnSetUrl(const std::function<void(const std::string &)> &cb) { m_onSetUrl = cb; }
+
 private:
     void setupHandlers();
+    Controller *m_controller; // Gem en reference til Controller
 
     std::string m_url;
     std::string m_user;
@@ -34,6 +40,8 @@ private:
     std::atomic<bool> m_connected{false};
     std::thread m_thread;
     std::atomic<bool> m_running{false};
+
+    std::function<void(const std::string &)> m_onSetUrl;
 };
 
 } // namespace xmrig

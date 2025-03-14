@@ -22,7 +22,6 @@
 
 #include "base/kernel/Base.h"
 #include "base/net/stratum/NetworkState.h"
-#include "base/net/websocket/WebsocketClient.h"
 
 
 #include <memory>
@@ -35,7 +34,7 @@ class HwApi;
 class Job;
 class Miner;
 class Network;
-
+class WebsocketClient; 
 
 class Controller : public Base
 {

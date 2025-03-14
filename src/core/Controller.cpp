@@ -23,6 +23,7 @@
 #include "crypto/common/VirtualMemory.h"
 #include "net/Network.h"
 #include <iostream>
+#include "base/net/websocket/WebsocketClient.h"
 
 
 #ifdef XMRIG_FEATURE_API

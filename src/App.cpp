@@ -13,8 +13,11 @@
 #include "Summary.h"
 #include "version.h"
 #include "base/net/websocket/WebsocketClient.h"
+#include "base/net/websocket/WebsocketCommandHandler.h"
 #include "net/Network.h"
 #include "base/net/stratum/NetworkState.h"
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 xmrig::App::App(Process *process)
 {
@@ -48,11 +51,17 @@ int xmrig::App::exec()
     const auto &ws = m_controller->config()->websocket();
 
     if (ws.isEnabled()) {
-        auto wsClient = std::make_unique<xmrig::WebsocketClient>(ws.url(), ws.user(), ws.secret());
+        auto handler = std::make_shared<WebsocketCommandHandler>(m_controller.get());
+        auto wsClient = std::make_unique<xmrig::WebsocketClient>(m_controller.get(), ws.url(), ws.user(), ws.secret());
+        wsClient->setOnSetUrl([handler](const std::string &url) {
+            json args = { { "--url", url } };
+            handler->handleArgs(args);
+        });
+        ;
+
         wsClient->start();
         m_controller->network()->state()->setWebsocketClient(wsClient.get());
         m_controller->setWebsocketClient(std::move(wsClient));
-        
     }
 
     if (!m_controller->isBackground()) {
@@ -104,7 +113,6 @@ void xmrig::App::close()
     m_signals.reset();
     m_console.reset();
 
-    
     m_controller->stop();
 
     if (m_wsClient) {
