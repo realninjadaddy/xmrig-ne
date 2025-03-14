@@ -50,6 +50,7 @@ public:
     ~Network() override;
 
     inline IStrategy *strategy() const { return m_strategy; }
+    inline NetworkState *state() const { return m_state; }
 
     void connect();
     void execCommand(char command);

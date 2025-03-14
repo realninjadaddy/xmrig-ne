@@ -25,7 +25,7 @@
 #include "base/net/stratum/Pool.h"
 #include "base/net/stratum/SubmitResult.h"
 #include "base/tools/Chrono.h"
-
+#include "base/net/websocket/WebsocketClient.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -292,6 +292,10 @@ void xmrig::NetworkState::onResultAccepted(IStrategy *strategy, IClient *client,
 {
     add(result, error);
 
+    
+    if (!error && m_wsClient) {
+        m_wsClient->sendShare("share", result.diff, result.actualDiff);
+    }
     StrategyProxy::onResultAccepted(strategy, client, result, error);
 }
 

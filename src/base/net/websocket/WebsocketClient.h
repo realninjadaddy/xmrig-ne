@@ -1,7 +1,9 @@
 #pragma once
 
 #include <string>
-#include <iostream>
+#include <atomic>
+#include <thread>
+#include <ixwebsocket/IXWebSocket.h>
 
 namespace xmrig {
 
@@ -9,24 +11,27 @@ class WebsocketClient {
 public:
     WebsocketClient(const std::string &url,
                     const std::string &user = {},
-                    const std::string &secret = {})
-        : m_url(url), m_user(user), m_secret(secret) {}
+                    const std::string &secret = {});
 
-    void connect() {
-        std::cout << "[WS] Connecting to: " << m_url << "\n";
-        if (!m_user.empty()) {
-            std::cout << "[WS] Using user: " << m_user << "\n";
-        }
-        if (!m_secret.empty()) {
-            std::cout << "[WS] Using secret (hidden)\n";
-        }
-        std::cout << "[WS] (stub) WebSocket connection would happen here.\n";
-    }
+    ~WebsocketClient();
+
+    void start();
+    void stop();
+    void send(const std::string &json);
+    void sendShare(const std::string &jobId, uint64_t diff, uint64_t actual);
+    bool isConnected() const;
 
 private:
+    void setupHandlers();
+
     std::string m_url;
     std::string m_user;
     std::string m_secret;
+
+    ix::WebSocket m_socket;
+    std::atomic<bool> m_connected{false};
+    std::thread m_thread;
+    std::atomic<bool> m_running{false};
 };
 
 } // namespace xmrig

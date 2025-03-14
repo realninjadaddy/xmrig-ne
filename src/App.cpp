@@ -1,31 +1,5 @@
-/* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
- * Copyright 2018-2024 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2024 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
- *
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <cstdlib>
 #include <uv.h>
-
 
 #include "App.h"
 #include "backend/cpu/Cpu.h"
@@ -39,32 +13,23 @@
 #include "Summary.h"
 #include "version.h"
 #include "base/net/websocket/WebsocketClient.h"
-
+#include "net/Network.h"
+#include "base/net/stratum/NetworkState.h"
 
 xmrig::App::App(Process *process)
 {
-
     m_controller = std::make_shared<Controller>(process);
-
-
-    [[maybe_unused]] const auto &ws = m_controller->config()->websocket();
-
 }
-
 
 xmrig::App::~App()
 {
     Cpu::release();
 }
 
-
 int xmrig::App::exec()
 {
- 
-
     if (!m_controller->isReady()) {
         LOG_EMERG("no valid configuration found, try https://xmrig.com/wizard");
-
         return 2;
     }
 
@@ -82,10 +47,13 @@ int xmrig::App::exec()
 
     const auto &ws = m_controller->config()->websocket();
 
-
     if (ws.isEnabled()) {
-        WebsocketClient client(ws.url(), ws.user(), ws.secret());
-        client.connect();
+        m_wsClient = std::unique_ptr<xmrig::WebsocketClient>(
+            new xmrig::WebsocketClient(ws.url(), ws.user(), ws.secret())
+        );
+        m_wsClient->start();
+        m_controller->network()->state()->setWebsocketClient(m_wsClient.get());
+
     }
 
     if (!m_controller->isBackground()) {
@@ -96,7 +64,6 @@ int xmrig::App::exec()
 
     if (m_controller->config()->isDryRun()) {
         LOG_NOTICE("%s " WHITE_BOLD("OK"), Tags::config());
-
         return 0;
     }
 
@@ -108,7 +75,6 @@ int xmrig::App::exec()
     return rc;
 }
 
-
 void xmrig::App::onConsoleCommand(char command)
 {
     if (command == 3) {
@@ -119,7 +85,6 @@ void xmrig::App::onConsoleCommand(char command)
         m_controller->execCommand(command);
     }
 }
-
 
 void xmrig::App::onSignal(int signum)
 {
@@ -134,7 +99,6 @@ void xmrig::App::onSignal(int signum)
         break;
     }
 }
-
 
 void xmrig::App::close()
 {

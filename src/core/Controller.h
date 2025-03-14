@@ -21,6 +21,7 @@
 
 
 #include "base/kernel/Base.h"
+#include "base/net/stratum/NetworkState.h"
 
 
 #include <memory>

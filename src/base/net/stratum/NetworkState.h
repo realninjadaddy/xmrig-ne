@@ -23,6 +23,7 @@
 #include "base/crypto/Algorithm.h"
 #include "base/net/stratum/strategies/StrategyProxy.h"
 #include "base/tools/String.h"
+#include "base/net/websocket/WebsocketClient.h"
 
 
 #include <array>
@@ -52,6 +53,8 @@ public:
 
     static const char *scaleDiff(uint64_t &diff);
     static std::string humanDiff(uint64_t diff);
+    xmrig::WebsocketClient *m_wsClient = nullptr;
+    void setWebsocketClient(xmrig::WebsocketClient *client) { m_wsClient = client; }
 
 protected:
     void onActive(IStrategy *strategy, IClient *client) override;
@@ -65,6 +68,7 @@ private:
     uint64_t connectionTime() const;
     void add(const SubmitResult &result, const char *error);
     void stop();
+
 
     Algorithm m_algorithm;
     bool m_active               = false;
