@@ -28,6 +28,7 @@
 #include "base/kernel/interfaces/ITimerListener.h"
 #include "base/tools/Object.h"
 #include "interfaces/IJobResultListener.h"
+#include "base/net/websocket/WebsocketClient.h"
 
 
 #include <vector>
@@ -54,6 +55,7 @@ public:
 
     void connect();
     void execCommand(char command);
+    void setWebsocketClient(xmrig::WebsocketClient *client) { m_wsClient = client; }
 
 protected:
     inline void onTimer(const Timer *) override { tick(); }
@@ -73,6 +75,8 @@ protected:
 
 private:
     constexpr static int kTickInterval = 1 * 1000;
+
+    xmrig::WebsocketClient *m_wsClient = nullptr;
 
     void setJob(IClient *client, const Job &job, bool donate);
     void tick();

@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(xmrig)
+# ---- IXWebSocket static linking ----
+include_directories("/usr/local/include")
+link_directories("/usr/local/lib64")
+set(IXWS_STATIC_LIB "/usr/local/lib64/libixwebsocket.a")
 
 option(WITH_HWLOC           "Enable hwloc support" ON)
 option(WITH_CN_LITE         "Enable CryptoNight-Lite algorithms family" ON)
@@ -119,7 +123,7 @@ set(SOURCES
     src/xmrig.cpp
     src/base/net/websocket/WebsocketConfig.cpp
     src/base/net/websocket/WebsocketClient.cpp
-   )
+    )
 
 set(SOURCES_CRYPTO
     src/crypto/cn/c_blake256.c
@@ -199,7 +203,6 @@ add_definitions(-DXMRIG_MINER_PROJECT -DXMRIG_JSON_SINGLE_LINE_ARRAY)
 add_definitions(-D__STDC_FORMAT_MACROS -DUNICODE -D_FILE_OFFSET_BITS=64)
 
 find_package(UV REQUIRED)
-find_package(Threads REQUIRED)
 
 include(cmake/flags.cmake)
 include(cmake/randomx.cmake)
@@ -240,10 +243,10 @@ if (WITH_DEBUG_LOG)
     add_definitions(/DAPP_DEBUG)
 endif()
 
-find_package(ZLIB REQUIRED)
+find_package(Threads REQUIRED)
 
 add_executable(${CMAKE_PROJECT_NAME} ${HEADERS} ${SOURCES} ${SOURCES_OS} ${HEADERS_CRYPTO} ${SOURCES_CRYPTO} ${SOURCES_SYSLOG} ${TLS_SOURCES} ${XMRIG_ASM_SOURCES})
-target_link_libraries(${CMAKE_PROJECT_NAME}
+target_link_libraries(${CMAKE_PROJECT_NAME} ${IXWS_STATIC_LIB} z
     ${XMRIG_ASM_LIBRARY}
     ${OPENSSL_LIBRARIES}
     ${UV_LIBRARIES}
@@ -252,9 +255,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     ${ARGON2_LIBRARY}
     ${ETHASH_LIBRARY}
     ${GHOSTRIDER_LIBRARY}
-    /usr/local/lib64/libixwebsocket.a
-    ${ZLIB_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
+    ${IXWEBSOCKET_LIBRARY}
+    Threads::Threads
 )
 
 if (WIN32)

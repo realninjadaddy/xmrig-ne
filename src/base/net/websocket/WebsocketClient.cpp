@@ -59,12 +59,20 @@ void WebsocketClient::start() {
     m_running = true;
     m_thread = std::thread([this]() {
         m_socket.setUrl(m_url);
-
         setupHandlers();
         m_socket.start();
 
         while (m_running) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::seconds(10));
+
+            if (m_connected) {
+                json ping = {
+                    {"type", "ping"},
+                    {"user", m_user},
+                    {"timestamp", std::time(nullptr)}
+                };
+                send(ping.dump());
+            }
         }
 
         m_socket.stop();
@@ -84,12 +92,7 @@ void WebsocketClient::send(const std::string &json) {
     }
 }
 
-void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_t actual)
-
-{
-    std::cout << "[WS] Sending share: jobId=" << jobId
-            << " diff=" << diff
-            << " actual=" << actual << std::endl;
+void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_t actual) {
     if (!m_connected) return;
 
     json msg = {
@@ -102,7 +105,31 @@ void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_
         {"timestamp", std::time(nullptr)}
     };
 
+    std::cout << "[WS] Sending share: jobId=" << jobId
+              << " diff=" << diff
+              << " actual=" << actual << std::endl;
     std::cout << "[WS] Payload: " << msg.dump() << std::endl;
+
+    send(msg.dump());
+}
+
+void WebsocketClient::sendJob(const std::string &algo, uint64_t diff, uint64_t height, int txCount) {
+    if (!m_connected) return;
+
+    json msg = {
+        {"type", "job"},
+        {"user", m_user},
+        {"algo", algo},
+        {"difficulty", diff},
+        {"height", height},
+        {"txCount", txCount},
+        {"timestamp", std::time(nullptr)}
+    };
+
+    std::cout << "[WS] Sending job: height=" << height
+              << " algo=" << algo
+              << " diff=" << diff
+              << " tx=" << txCount << std::endl;
 
     send(msg.dump());
 }

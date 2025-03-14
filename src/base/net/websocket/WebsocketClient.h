@@ -19,6 +19,7 @@ public:
     void stop();
     void send(const std::string &json);
     void sendShare(const std::string &jobId, uint64_t diff, uint64_t actual);
+    void sendJob(const std::string &algo, uint64_t diff, uint64_t height, int txCount);
     bool isConnected() const;
 
 private:
