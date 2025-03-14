@@ -39,6 +39,11 @@ void WebsocketClient::setupHandlers() {
         else if (msg->type == ix::WebSocketMessageType::Close) {
             m_connected = false;
             std::cout << "[WS] Disconnected\n";
+            
+            // Reconnect after short delay
+            std::cout << "[WS] Attempting reconnect...\n";
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            m_socket.start();
         }
         else if (msg->type == ix::WebSocketMessageType::Message) {
             std::cout << "[WS] Received: " << msg->str << "\n";
@@ -46,7 +51,6 @@ void WebsocketClient::setupHandlers() {
                 json data = json::parse(msg->str);
                 if (data["type"] == "reload_config") {
                     std::cout << "[WS] Trigger config reload!\n";
-                    // TODO: Hook til reload-funktion
                 }
             } catch (...) {
                 std::cerr << "[WS] Invalid JSON received\n";
@@ -75,8 +79,7 @@ void WebsocketClient::start() {
             }
         }
 
-        m_socket.stop(1000, "XMRig shutting down");
-
+        m_socket.stop();
     });
 }
 
@@ -85,9 +88,11 @@ void WebsocketClient::stop() {
     if (m_thread.joinable()) {
         m_thread.join();
     }
+    m_socket.stop(1000, "XMRig shutting down");
 }
 
 void WebsocketClient::send(const std::string &json) {
+    std::cout << "[WS] Sending payload: " << json << std::endl;
     if (m_connected) {
         m_socket.sendText(json);
     }
@@ -137,6 +142,28 @@ void WebsocketClient::sendJob(const std::string &algo, uint64_t diff, uint64_t h
 
 bool WebsocketClient::isConnected() const {
     return m_connected;
+}
+
+void WebsocketClient::sendStats(double h10s, double h60s, double h15m, uint64_t uptime) {
+    std::cout << "[WS] sendStats() CALLED\n";
+    std::cout << "[WS] Connected? " << (m_connected ? "YES" : "NO") << std::endl;
+    if (!m_connected) return;
+
+
+    json msg = {
+        {"type", "stats"},
+        {"user", m_user},
+        {"uptime", uptime},
+        {"hashrate", {
+            {"10s", h10s},
+            {"60s", h60s},
+            {"15m", h15m}
+        }},
+        {"timestamp", std::time(nullptr)}
+    };
+
+    std::cout << "[WS] Sending stats: " << msg.dump() << std::endl;
+    send(msg.dump());
 }
 
 } // namespace xmrig

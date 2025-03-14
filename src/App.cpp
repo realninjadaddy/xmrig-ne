@@ -48,12 +48,11 @@ int xmrig::App::exec()
     const auto &ws = m_controller->config()->websocket();
 
     if (ws.isEnabled()) {
-        m_wsClient = std::unique_ptr<xmrig::WebsocketClient>(
-            new xmrig::WebsocketClient(ws.url(), ws.user(), ws.secret())
-        );
-        m_wsClient->start();
-        m_controller->network()->state()->setWebsocketClient(m_wsClient.get());
-
+        auto wsClient = std::make_unique<xmrig::WebsocketClient>(ws.url(), ws.user(), ws.secret());
+        wsClient->start();
+        m_controller->network()->state()->setWebsocketClient(wsClient.get());
+        m_controller->setWebsocketClient(std::move(wsClient));
+        
     }
 
     if (!m_controller->isBackground()) {

@@ -22,6 +22,7 @@
 
 #include "base/kernel/Base.h"
 #include "base/net/stratum/NetworkState.h"
+#include "base/net/websocket/WebsocketClient.h"
 
 
 #include <memory>
@@ -54,9 +55,16 @@ public:
     Network *network() const;
     void execCommand(char command) const;
 
+    uint64_t timestamp() const { return m_timestamp; }
+    WebsocketClient* websocketClient() const { return m_wsClient.get(); }
+    void setWebsocketClient(std::unique_ptr<xmrig::WebsocketClient> client) { m_wsClient = std::move(client); }
+    
+
 private:
     std::shared_ptr<Miner> m_miner;
     std::shared_ptr<Network> m_network;
+    uint64_t m_timestamp = 0;
+    std::unique_ptr<xmrig::WebsocketClient> m_wsClient;
 
 #   ifdef XMRIG_FEATURE_API
     std::shared_ptr<HwApi> m_hwApi;

@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
+
 project(xmrig)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # ---- IXWebSocket static linking ----
 include_directories("/usr/local/include")
 link_directories("/usr/local/lib64")
@@ -244,6 +249,7 @@ if (WITH_DEBUG_LOG)
 endif()
 
 find_package(Threads REQUIRED)
+add_compile_options(-std=c++14)
 
 add_executable(${CMAKE_PROJECT_NAME} ${HEADERS} ${SOURCES} ${SOURCES_OS} ${HEADERS_CRYPTO} ${SOURCES_CRYPTO} ${SOURCES_SYSLOG} ${TLS_SOURCES} ${XMRIG_ASM_SOURCES})
 target_link_libraries(${CMAKE_PROJECT_NAME} ${IXWS_STATIC_LIB} z

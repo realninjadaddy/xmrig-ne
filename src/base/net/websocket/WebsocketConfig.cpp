@@ -10,7 +10,7 @@ void WebsocketConfig::load(const rapidjson::Value &value)
     std::cout << "[DEBUG] WebsocketConfig::load() CALLED\n";
 
     if (!value.IsObject()) {
-        std::cout << "[DEBUG] WebsocketConfig::load(): value is NOT object\n";
+            std::cout << "[DEBUG] WebsocketConfig::load(): value is NOT object\n";
         return;
     }
 

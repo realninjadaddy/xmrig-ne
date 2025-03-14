@@ -37,6 +37,9 @@
 #include "core/Controller.h"
 #include "crypto/common/Nonce.h"
 #include "version.h"
+#include "base/net/websocket/WebsocketClient.h"
+#include "base/tools/Chrono.h"
+#include <iostream>
 
 
 #ifdef XMRIG_FEATURE_API
@@ -697,6 +700,24 @@ void xmrig::Miner::onTimer(const Timer *)
     if (stopMiner) {
         stop();
     }
+
+    if ((d_ptr->ticks % 60) == 0) {
+        if (!d_ptr->backends.empty()) {
+            const auto h10s = d_ptr->backends[0]->hashrate()->calc(Hashrate::ShortInterval).second;
+            const auto h60s = d_ptr->backends[0]->hashrate()->calc(Hashrate::MediumInterval).second;
+            const auto h15m = d_ptr->backends[0]->hashrate()->calc(Hashrate::LargeInterval).second;
+            const auto uptime = (Chrono::currentMSecsSinceEpoch() - d_ptr->controller->timestamp()) / 1000;
+
+            std::cout << "  h10s: " << h10s << ", h60s: " << h60s << ", h15m: " << h15m << ", uptime: " << uptime << std::endl;
+
+            if (d_ptr->controller->websocketClient()) {
+                std::cout << "[MINER] Attempting to send stats...\n";
+                d_ptr->controller->websocketClient()->sendStats(h10s, h60s, h15m, uptime);
+            }
+        }
+    
+    }
+    
 }
 
 
