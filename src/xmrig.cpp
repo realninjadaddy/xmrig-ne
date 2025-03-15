@@ -31,9 +31,9 @@ int main(int argc, char **argv)
     //    return Entry::exec(process, entry);
     }
 
-    std::cout << "[DEBUG] Før App instantieres" << std::endl;
+    //std::cout << "[DEBUG] Før App instantieres" << std::endl;
     App app(&process);
-    std::cout << "[DEBUG] Efter App instantieres, før exec()" << std::endl;
+    //std::cout << "[DEBUG] Efter App instantieres, før exec()" << std::endl;
 
     return app.exec();
 }

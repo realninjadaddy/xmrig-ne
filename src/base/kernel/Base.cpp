@@ -74,6 +74,7 @@ public:
         Log::init();
 
         config = load(process);
+
     }
 
 
@@ -184,7 +185,12 @@ bool xmrig::Base::isReady() const
 int xmrig::Base::init()
 {
 
+    //std::cout << "[DEBUG] Base::init() called\n";
 
+    // Sørg for, at d_ptr->config er gyldig
+    if (!d_ptr->config) {
+        d_ptr->config = new Config();
+    }
     #   ifdef XMRIG_FEATURE_API
     d_ptr->api = new Api(this);
     d_ptr->api->addListener(this);
@@ -261,22 +267,23 @@ bool xmrig::Base::reload(const rapidjson::Value &json)
     if (reader.isEmpty()) {
         return false;
     }
-
+    
     auto config = new Config();
     if (!config->read(reader, d_ptr->config->fileName())) {
         delete config;
 
         return false;
     }
-
+    
     const bool saved = config->save();
 
+    
     if (config->isWatch() && d_ptr->watcher && saved) {
         delete config;
 
         return true;
     }
-
+    
     d_ptr->replace(config);
 
     return true;
@@ -285,6 +292,7 @@ bool xmrig::Base::reload(const rapidjson::Value &json)
 
 xmrig::Config *xmrig::Base::config() const
 {
+   
     assert(d_ptr->config != nullptr);
 
     return d_ptr->config;

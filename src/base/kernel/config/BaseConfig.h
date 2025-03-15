@@ -87,6 +87,7 @@ public:
 
     bool read(const IJsonReader &reader, const char *fileName) override;
     bool save() override;
+    rapidjson::Document toJSON() const;
 
     static void printVersions();
 

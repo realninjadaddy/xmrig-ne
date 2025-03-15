@@ -8,6 +8,7 @@ class Controller;
 class WebsocketCommandHandler {
 public:
     explicit WebsocketCommandHandler(Controller *controller);
+    ~WebsocketCommandHandler();
 
     void handleArgs(const nlohmann::json &args);
 

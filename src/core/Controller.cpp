@@ -38,7 +38,7 @@
 xmrig::Controller::Controller(Process *process) :
     Base(process)
 {
-    std::cout << "[DEBUG] Inside Controller constructor\n";
+    //std::cout << "[DEBUG] Inside Controller constructor\n";
 
 }
 
@@ -51,7 +51,10 @@ xmrig::Controller::~Controller()
 
 int xmrig::Controller::init()
 {
+    //std::cout << "[DEBUG] Before Base::init()\n";
     Base::init();
+    //std::cout << "[DEBUG] After Base::init()\n";
+    //std::cout << "[DEBUG] config() is " << (config() ? "not null" : "null") << "\n";
 
     VirtualMemory::init(config()->cpu().memPoolSize(), config()->cpu().hugePageSize());
 

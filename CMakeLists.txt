@@ -255,6 +255,7 @@ set(HEADERS
 
 set(SOURCES
     ${SOURCES}
+    src/base/kernel/config/BaseConfig.cpp
     src/base/net/websocket/WebsocketCommandHandler.cpp
 )
 

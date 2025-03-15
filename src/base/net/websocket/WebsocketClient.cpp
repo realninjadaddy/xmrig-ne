@@ -8,19 +8,25 @@
 #include <ctime>
 #include "core/Controller.h"
 #include "core/config/Config.h"
+#include "base/net/websocket/WebsocketCommandHandler.h"
+#include "base/io/log/Log.h"
+#include "base/io/log/Tags.h"
 
 using json = nlohmann::json;
 
 namespace xmrig {
 
-    WebsocketClient::WebsocketClient(Controller *controller, const std::string &url, const std::string &user, const std::string &secret)
-    : m_controller(controller), m_url(url), m_user(user), m_secret(secret)
+WebsocketClient::WebsocketClient(Controller *controller, WebsocketCommandHandler *handler,
+        const std::string &url, const std::string &user,
+        const std::string &secret)
+: m_controller(controller), m_handler(handler), m_url(url), m_user(user), m_secret(secret)
 {
+
     ix::initNetSystem();
 }
 
 WebsocketClient::~WebsocketClient() {
-    std::cout << "[WS] ~WebsocketClient() called, stopping thread...\n";
+    //std::cout << "[WS] ~WebsocketClient() called, stopping thread...\n";
     stop();
 }
 
@@ -28,7 +34,7 @@ void WebsocketClient::setupHandlers() {
     m_socket.setOnMessageCallback([this](const ix::WebSocketMessagePtr &msg) {
         if (msg->type == ix::WebSocketMessageType::Open) {
             m_connected = true;
-            std::cout << "[WS] Connected\n";
+            LOG_INFO(WHITE_ON_GREY(" socket  ") " Connected.");
 
             json hello = {
                 {"type", "hello"},
@@ -39,95 +45,31 @@ void WebsocketClient::setupHandlers() {
         }
         else if (msg->type == ix::WebSocketMessageType::Close) {
             m_connected = false;
-            std::cout << "[WS] Disconnected\n";
-            std::cout << "[WS] Attempting reconnect...\n";
+            LOG_INFO(WHITE_ON_GREY(" socket  ") " Disconnected.");
+            LOG_INFO(WHITE_ON_GREY(" socket  ") " Attempting reconnect....");
             std::this_thread::sleep_for(std::chrono::seconds(2));
             m_socket.start();
         }
         else if (msg->type == ix::WebSocketMessageType::Message) {
-            std::cout << "[WS] Received: " << msg->str << "\n";
+            //std::cout << "[WS] Received: " << msg->str << "\n";
             try {
+                //std::cout << "[WS] msg->str: " << msg->str << std::endl;
                 json data = json::parse(msg->str);
-                std::cout << "[WS] JSON type: " << data["type"] << std::endl;
+                //std::cout << "[WS] JSON type: " << data["type"] << std::endl;
+                //std::cout << "[WS] JSON : " << data << std::endl;
 
-                if (data["type"] == "set_diff") {
-                    std::cout << "[WS] Triggering set_diff reload\n";
-                
-                    if (!data.contains("value") || !data["value"].is_number_integer()) {
-                        std::cerr << "[WS] Invalid value for set_diff\n";
-                        return;
-                    }
-                
-                    // Ny værdi for +XXXXX
-                    int value = data["value"].get<int>();
-                
-                    // Hent den eksisterende config
-                    auto config = m_controller->config();
-                
-                    // Lav et nyt rapidjson-dokument til at opdatere wallet-adressen
-                    rapidjson::Document newConfig(rapidjson::kObjectType);
-                    rapidjson::Document::AllocatorType &allocator = newConfig.GetAllocator();
-                
-                    // Byg ny pool med opdateret wallet-adresse
-                    rapidjson::Value pools(rapidjson::kArrayType);
-                    for (const auto &pool : config->pools().data()) {
-                        rapidjson::Value poolObj(rapidjson::kObjectType);
-                        std::string newUser = pool.user().data();
-                
-                        // Fjern evt. +XXXXX, hvis det findes
-                        size_t plusPos = newUser.find('+');
-                        if (plusPos != std::string::npos) {
-                            newUser = newUser.substr(0, plusPos);
-                        }
-                
-                        // Tilføj +value
-                        newUser += "+" + std::to_string(value);
-                
-                        // Byg pool JSON
-                        poolObj.AddMember("url", rapidjson::Value(pool.url().data(), allocator), allocator);
-                        poolObj.AddMember("user", rapidjson::Value(newUser.c_str(), allocator), allocator);
-                
-                        pools.PushBack(poolObj, allocator);
-                    }
-                
-                    // Tilføj pools til ny config
-                    newConfig.AddMember("pools", pools, allocator);
-                
-                    // Kald reload på den opdaterede config
-                    if (m_controller->reload(newConfig)) {
-                        std::cout << "[WS] Config reloaded with new diff value\n";
-                    } else {
-                        std::cerr << "[WS] Reload failed\n";
+                if (data.contains("type") && data["type"] == "set_ws_args") {
+                    //std::cout << "[WS] set_args handler triggered\n";
+
+                    if (data.contains("ws_args") && data["ws_args"].is_object()) {
+
+                        if (m_handler) {
+                            m_handler->handleArgs(data);
+                        }                        
                     }
                 }
-                 else if (data["type"] == "reload_config") {
-                    std::cout << "[WS] Trigger config reload!\n";
-                }
-                else if (data["type"] == "set_args") {
-                    std::cout << "[WS] set_args handler triggered\n";
-                    if (data.contains("args") && data["args"].is_object()) {
-                        const auto &args = data["args"];
-
-                        std::string newUrl;
-                        if (args.contains("--url") && args["--url"].is_string()) {
-                            std::cout << "[WS] --url found: " << args["--url"] << std::endl;
-                            newUrl = args["--url"];
-                        } else if (args.contains("-o") && args["-o"].is_string()) {
-                            std::cout << "[WS] -o found: " << args["-o"] << std::endl;
-                            newUrl = args["-o"];
-                        } else {
-                            std::cout << "[WS] --url NOT found\n";
-                        }
-                
-
-                        if (!newUrl.empty() && m_onSetUrl) {
-                            std::cout << "[WS] Calling m_onSetUrl with: " << newUrl << "\n";
-                            m_onSetUrl(newUrl);
-                        }
-                    }
-                }
-            } catch (...) {
-                std::cerr << "[WS] Invalid JSON received\n";
+            } catch (const json::exception& e) {
+                //std::cerr << "[WS] JSON parsing error: " << e.what() << std::endl;
             }
         }
     });
@@ -185,10 +127,12 @@ void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_
         {"timestamp", std::time(nullptr)}
     };
 
+    /*
     std::cout << "[WS] Sending share: jobId=" << jobId
               << " diff=" << diff
               << " actual=" << actual << std::endl;
     std::cout << "[WS] Payload: " << msg.dump() << std::endl;
+    */
 
     send(msg.dump());
 }

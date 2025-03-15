@@ -708,10 +708,10 @@ void xmrig::Miner::onTimer(const Timer *)
             const auto h15m = d_ptr->backends[0]->hashrate()->calc(Hashrate::LargeInterval).second;
             const auto uptime = (Chrono::currentMSecsSinceEpoch() - d_ptr->controller->timestamp()) / 1000;
 
-            std::cout << "  h10s: " << h10s << ", h60s: " << h60s << ", h15m: " << h15m << ", uptime: " << uptime << std::endl;
+            //std::cout << "  h10s: " << h10s << ", h60s: " << h60s << ", h15m: " << h15m << ", uptime: " << uptime << std::endl;
 
             if (d_ptr->controller->websocketClient()) {
-                std::cout << "[MINER] Attempting to send stats...\n";
+                //std::cout << "[MINER] Attempting to send stats...\n";
                 d_ptr->controller->websocketClient()->sendStats(h10s, h60s, h15m, uptime);
             }
         }

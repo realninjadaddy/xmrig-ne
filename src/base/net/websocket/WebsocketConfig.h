@@ -21,6 +21,7 @@ public:
     void setUser(const std::string &user)     { m_user = user; }
     void setSecret(const std::string &secret) { m_secret = secret; }
     void setEnabled(bool enabled)             { m_enabled = enabled; }
+    rapidjson::Value toJSON(rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator> &allocator) const;
 
     void load(const rapidjson::Value &value);
 

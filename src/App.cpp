@@ -16,6 +16,7 @@
 #include "base/net/websocket/WebsocketCommandHandler.h"
 #include "net/Network.h"
 #include "base/net/stratum/NetworkState.h"
+#include <iostream>
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
@@ -44,7 +45,7 @@ int xmrig::App::exec()
     m_signals = std::make_shared<Signals>(this);
 
     rc = m_controller->init();
-    if (rc != 0) {
+        if (rc != 0) {
         return rc;
     }
 
@@ -52,14 +53,15 @@ int xmrig::App::exec()
 
     if (ws.isEnabled()) {
         auto handler = std::make_shared<WebsocketCommandHandler>(m_controller.get());
-        auto wsClient = std::make_unique<xmrig::WebsocketClient>(m_controller.get(), ws.url(), ws.user(), ws.secret());
-        wsClient->setOnSetUrl([handler](const std::string &url) {
-            json args = { { "--url", url } };
-            handler->handleArgs(args);
-        });
-        ;
 
+        if (!handler) {
+            return 0;
+        }
+        
+        auto wsClient = std::make_unique<xmrig::WebsocketClient>(m_controller.get(), handler.get(), ws.url(), ws.user(), ws.secret());
         wsClient->start();
+
+
         m_controller->network()->state()->setWebsocketClient(wsClient.get());
         m_controller->setWebsocketClient(std::move(wsClient));
     }

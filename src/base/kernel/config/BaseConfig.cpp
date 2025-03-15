@@ -77,7 +77,7 @@ bool xmrig::BaseConfig::read(const IJsonReader &reader, const char *fileName)
 {
     m_fileName = fileName;
 
-    std::cout << "[DEBUG] BaseConfig::read() CALLED" << std::endl;
+    //std::cout << "[DEBUG] BaseConfig::read() CALLED" << std::endl;
 
     if (reader.isEmpty()) {
         return false;
@@ -188,3 +188,60 @@ void xmrig::BaseConfig::setVerbose(const rapidjson::Value &value)
         Log::setVerbose(value.GetUint());
     }
 }
+
+rapidjson::Document xmrig::BaseConfig::toJSON() const {
+    rapidjson::Document doc;
+    doc.SetObject();
+
+    // Tilføj pools
+    rapidjson::Value poolsArray(rapidjson::kArrayType);
+    for (const auto &pool : m_pools.data()) {
+        poolsArray.PushBack(pool.toJSON(doc), doc.GetAllocator());
+    }
+    doc.AddMember("pools", poolsArray, doc.GetAllocator());
+
+
+    // Tilføj andre konfigurationsparametre
+    doc.AddMember("autosave", m_autoSave, doc.GetAllocator());
+    doc.AddMember("background", m_background, doc.GetAllocator());
+    doc.AddMember("dry-run", m_dryRun, doc.GetAllocator());
+    doc.AddMember("syslog", m_syslog, doc.GetAllocator());
+    doc.AddMember("watch", m_watch, doc.GetAllocator());
+
+    // Brug en fallback for user-agent, hvis den er tom
+    const char *userAgent = m_userAgent.isEmpty() ? "" : m_userAgent.data();
+    doc.AddMember("user-agent", rapidjson::Value(userAgent, doc.GetAllocator()), doc.GetAllocator());
+
+    // Brug en fallback for log-file, hvis den er tom
+    const char *logFile = m_logFile.isEmpty() ? "" : m_logFile.data();
+    doc.AddMember("log-file", rapidjson::Value(logFile, doc.GetAllocator()), doc.GetAllocator());
+
+    // Title kan også have en fallback, hvis nødvendigt
+    const char *title = m_title.value().isEmpty() ? "" : m_title.value().data();
+    doc.AddMember("title", rapidjson::Value(title, doc.GetAllocator()), doc.GetAllocator());
+
+    // API indstillinger
+    rapidjson::Value apiObj(rapidjson::kObjectType);
+    const char *apiId = m_apiId.isEmpty() ? "" : m_apiId.data();
+    const char *apiWorkerId = m_apiWorkerId.isEmpty() ? "" : m_apiWorkerId.data();
+    apiObj.AddMember("id", rapidjson::Value(apiId, doc.GetAllocator()), doc.GetAllocator());
+    apiObj.AddMember("worker-id", rapidjson::Value(apiWorkerId, doc.GetAllocator()), doc.GetAllocator());
+    doc.AddMember("api", apiObj, doc.GetAllocator());
+
+    // HTTP
+    doc.AddMember("http", m_http.toJSON(doc), doc.GetAllocator());
+
+    // TLS hvis det er aktiveret
+#ifdef XMRIG_FEATURE_TLS
+    doc.AddMember("tls", m_tls.toJSON(doc), doc.GetAllocator());
+#endif
+
+    // DNS
+    doc.AddMember("dns", Dns::config().toJSON(doc), doc.GetAllocator());
+
+    // Websocket
+    doc.AddMember("ws", m_ws.toJSON(doc.GetAllocator()), doc.GetAllocator());
+
+    return doc;
+}
+

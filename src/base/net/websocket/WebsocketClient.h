@@ -9,13 +9,13 @@
 namespace xmrig {
 
 class Controller; // Fremad-deklaration
+class WebsocketCommandHandler;
 class WebsocketClient {
 public:
-    WebsocketClient(Controller *controller,
-                    const std::string &url,
-                    const std::string &user = {},
-                    const std::string &secret = {});
-    ~WebsocketClient();
+WebsocketClient(Controller *controller, WebsocketCommandHandler *handler,
+    const std::string &url, const std::string &user = {},
+    const std::string &secret = {});
+~WebsocketClient();
 
     void start();
     void stop();
@@ -26,11 +26,12 @@ public:
     void sendStats(double h10s, double h60s, double h15m, uint64_t uptime);
 
     // NYT
-    void setOnSetUrl(const std::function<void(const std::string &)> &cb) { m_onSetUrl = cb; }
+    //void setOnSetUrl(const std::function<void(const std::string &)> &cb) { m_onSetUrl = cb; }
 
 private:
     void setupHandlers();
     Controller *m_controller; // Gem en reference til Controller
+    WebsocketCommandHandler *m_handler; // Pointer til handler
 
     std::string m_url;
     std::string m_user;
