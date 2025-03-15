@@ -114,28 +114,34 @@ void WebsocketClient::send(const std::string &json) {
     }
 }
 
-void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_t actual) {
+void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_t actual, const char *error) {
     if (!m_connected) return;
 
-    json msg = {
-        {"type", "share"},
-        {"user", m_user},
-        {"result", "accepted"},
-        {"difficulty", diff},
-        {"actualDifficulty", actual},
-        {"jobId", jobId},
-        {"timestamp", std::time(nullptr)}
-    };
-
-    /*
-    std::cout << "[WS] Sending share: jobId=" << jobId
-              << " diff=" << diff
-              << " actual=" << actual << std::endl;
-    std::cout << "[WS] Payload: " << msg.dump() << std::endl;
-    */
-
-    send(msg.dump());
+    if (!error) {
+        json msg = {
+            {"type", "share"},
+            {"user", m_user},
+            {"result", "accepted"},
+            {"difficulty", diff},
+            {"actualDifficulty", actual},
+            {"jobId", jobId},
+            {"timestamp", std::time(nullptr)}
+        };
+        send(msg.dump());
+    } else {
+        json msg = {
+            {"type", "share"},
+            {"user", m_user},
+            {"result", "rejected"},
+            {"difficulty", diff},
+            {"actualDifficulty", actual},
+            {"jobId", jobId},
+            {"timestamp", std::time(nullptr)}
+        };
+        send(msg.dump());
+    }
 }
+
 
 void WebsocketClient::sendJob(const std::string &algo, uint64_t diff, uint64_t height, int txCount) {
     if (!m_connected) return;

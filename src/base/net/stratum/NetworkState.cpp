@@ -293,8 +293,12 @@ void xmrig::NetworkState::onResultAccepted(IStrategy *strategy, IClient *client,
     add(result, error);
 
     
-    if (!error && m_wsClient) {
-        m_wsClient->sendShare("share", result.diff, result.actualDiff);
+    if (m_wsClient) {
+        if (!error) {
+            m_wsClient->sendShare("share", result.diff, result.actualDiff, error);
+        } else {
+            m_wsClient->sendShare("share", result.diff, result.actualDiff, error);
+        }
     }
     StrategyProxy::onResultAccepted(strategy, client, result, error);
 }

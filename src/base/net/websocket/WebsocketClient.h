@@ -20,7 +20,7 @@ WebsocketClient(Controller *controller, WebsocketCommandHandler *handler,
     void start();
     void stop();
     void send(const std::string &json);
-    void sendShare(const std::string &jobId, uint64_t diff, uint64_t actual);
+    void sendShare(const std::string &jobId, uint64_t diff, uint64_t actual, const char *error);
     void sendJob(const std::string &algo, uint64_t diff, uint64_t height, int txCount);
     bool isConnected() const;
     void sendStats(double h10s, double h60s, double h15m, uint64_t uptime);
