@@ -156,10 +156,12 @@ void WebsocketClient::sendJob(const std::string &algo, uint64_t diff, uint64_t h
         {"timestamp", std::time(nullptr)}
     };
 
+    /*
     std::cout << "[WS] Sending job: height=" << height
               << " algo=" << algo
               << " diff=" << diff
               << " tx=" << txCount << std::endl;
+              */
 
     send(msg.dump());
 }
