@@ -26,6 +26,7 @@
 #include "base/net/stratum/SubmitResult.h"
 #include "base/tools/Chrono.h"
 #include "base/net/websocket/WebsocketClient.h"
+#include <iostream>
 
 #include <algorithm>
 #include <cstdio>
@@ -273,6 +274,16 @@ void xmrig::NetworkState::onJob(IStrategy *strategy, IClient *client, const Job 
 {
     m_algorithm = job.algorithm();
     m_diff      = job.diff();
+
+    if (m_wsClient) {
+
+        m_wsClient->sendJob(
+            job.algorithm().name(),
+            job.diff(),
+            job.height(),
+            job.getNumTransactions()
+        );
+    }    
 
     StrategyProxy::onJob(strategy, client, job, params);
 }

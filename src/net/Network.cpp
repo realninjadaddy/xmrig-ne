@@ -171,14 +171,6 @@ void xmrig::Network::onJob(IStrategy *strategy, IClient *client, const Job &job,
 
     setJob(client, job, m_donate == strategy);
 
-    if (m_wsClient) {
-        m_wsClient->sendJob(
-            job.algorithm().name(),
-            job.diff(),
-            job.height(),
-            job.getNumTransactions()
-        );
-    }    
 }
 
 
