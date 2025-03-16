@@ -32,6 +32,13 @@ WebsocketClient::~WebsocketClient() {
 
 void WebsocketClient::setupHandlers() {
     m_socket.setOnMessageCallback([this](const ix::WebSocketMessagePtr &msg) {
+        //LOG_INFO("WebSocket", "onMessageCallback triggered"); std::cout << "[WebSocket:INFO] " << "onMessageCallback triggered" << std::endl;
+        if (!msg) {
+            //LOG_ERR("WebSocket", "Null WebSocket message received."); std::cout << "[WebSocket:ERR] " << "Null WebSocket message received." << std::endl;
+            return;
+        }
+        //LOG_INFO("WebSocket", "Message type: " + std::to_string(static_cast<int>(msg->type))); std::cout << "[WebSocket:INFO] " << "Message type: " + std::to_string(static_cast<int>(msg->type)) << std::endl;
+        //LOG_INFO("WebSocket", "Raw message content: " + msg->str); std::cout << "[WebSocket:INFO] " << "Raw message content: " + msg->str << std::endl;
         if (msg->type == ix::WebSocketMessageType::Open) {
             m_connected = true;
             LOG_INFO(WHITE_ON_GREY(" socket  ") " Connected.");
@@ -54,7 +61,13 @@ void WebsocketClient::setupHandlers() {
             //std::cout << "[WS] Received: " << msg->str << "\n";
             try {
                 //std::cout << "[WS] msg->str: " << msg->str << std::endl;
-                json data = json::parse(msg->str);
+                json data;
+                try {
+                    data = json::parse(msg->str);
+                } catch (const std::exception &e) {
+                    //LOG_ERR("WebSocket", "JSON parse failed: " + std::string(e.what())); std::cout << "[WebSocket:ERR] " << "JSON parse failed: " + std::string(e.what()) << std::endl;
+                    return;
+                }
                 //std::cout << "[WS] JSON type: " << data["type"] << std::endl;
                 //std::cout << "[WS] JSON : " << data << std::endl;
 
@@ -76,6 +89,10 @@ void WebsocketClient::setupHandlers() {
 }
 
 void WebsocketClient::start() {
+    //LOG_INFO("WebSocket", "start() called"); std::cout << "[WebSocket:INFO] " << "start() called" << std::endl;
+    //LOG_INFO("WebSocket", "Using URL: " + m_url); std::cout << "[WebSocket:INFO] " << "Using URL: " + m_url << std::endl;
+    //LOG_INFO("WebSocket", "Using user: " + m_user); std::cout << "[WebSocket:INFO] " << "Using user: " + m_user << std::endl;
+    //LOG_INFO("WebSocket", "Using secret: " + m_secret); std::cout << "[WebSocket:INFO] " << "Using secret: " + m_secret << std::endl;
     m_running = true;
     m_thread = std::thread([this]() {
         m_socket.setUrl(m_url);

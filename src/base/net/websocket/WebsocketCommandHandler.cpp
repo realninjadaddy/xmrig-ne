@@ -1,174 +1,101 @@
 #include "base/net/websocket/WebsocketCommandHandler.h"
 #include "core/Controller.h"
-#include "core/config/Config.h"
-#include "base/kernel/Base.h"
-#include <iostream>
+#include "3rdparty/rapidjson/document.h"
+#include "3rdparty/rapidjson/stringbuffer.h"
+#include "3rdparty/rapidjson/writer.h"
+#include "base/io/json/Json.h"
+#include "base/net/stratum/Pool.h"
+#include "base/net/stratum/Pools.h"
 #include <nlohmann/json.hpp>
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
+#include <iostream>
 #include "base/io/log/Log.h"
-#include "base/io/log/Tags.h"
+#include "core/config/Config.h"
 
-using json = nlohmann::json;
-using namespace xmrig;
+namespace xmrig {
 
 WebsocketCommandHandler::WebsocketCommandHandler(Controller *controller)
     : m_controller(controller)
 {
-    //std::cerr << "[DEBUG] WebsocketCommandHandler constructed with controller\n";
 }
 
-WebsocketCommandHandler::~WebsocketCommandHandler()
-{
-    //std::cerr << "[DEBUG] WebsocketCommandHandler is being destroyed\n";
-}
+WebsocketCommandHandler::~WebsocketCommandHandler() = default;
 
-void WebsocketCommandHandler::handleArgs(const json &args)
-{
-    if (!m_controller) {
-        //std::cerr << "[DEBUG] m_controller is nullptr in handleArgs()\n";
+void WebsocketCommandHandler::handleArgs(const nlohmann::json &message) {
+    if (!message.is_object()) {
+        LOG_ERR("[WebSocket:ERR] Invalid args payload (not an object)");
         return;
     }
-    //std::cerr << "[DEBUG] handleArgs() is running with valid m_controller\n";
-    if (!this) {
-        //std::cerr << "WebsocketCommandHandler is not initialized.\n";
+
+    if (!message.contains("ws_args") || !message["ws_args"].is_object()) {
+        LOG_ERR("[WebSocket:ERR] Missing or invalid 'ws_args'");
         return;
     }
-    if (false) {
-  
-    } else if (args.contains("type") && args["type"] == "set_ws_args") {
 
-        // Hent hele den eksisterende konfiguration
-        auto fullConfig = m_controller->config()->toJSON();
-    
-        // Kopier originalen for at kunne sammenligne senere
-        rapidjson::Document originalConfig;
-        originalConfig.CopyFrom(fullConfig, fullConfig.GetAllocator());
-    
-        // Iterer over args["ws_args"] og opdater fullConfig
-        if (args.contains("ws_args") && args["ws_args"].is_object()) {
-            for (const auto& item : args["ws_args"].items()) {
-                const auto& key = item.key();
-                const auto& value = item.value();
-    
-                //std::cout << "Key: " << key << ", Is boolean: " << value.is_boolean() << ", Is string: " << value.is_string() << std::endl;
-                if (key == "--url" || key == "-o") {
-                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["url"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
-                        }
-                    }
-                } else if (key == "--user" || key == "-u") {
-                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["user"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
-                        }
-                    }
-                } else if (key == "--algo" || key == "-a") {
-                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["algo"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
-                        }
-                    }
-                } else if (key == "--pass" || key == "-p") {
-                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["pass"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
-                        }
-                    }
-                } else if (key == "--tls") {
-                    if (value.is_boolean() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["tls"].SetBool(value.get<bool>());
-                        }
-                    }
-                } else if (key == "--tls-fingerprint") {
-                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["tls-fingerprint"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
-                        }
-                    }
-                } else if (key == "--coin") {
-                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["coin"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
-                        }
-                    }
-                } else if (key == "--rig-id") {
-                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["rig-id"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
-                        }
-                    }
-                } else if (key == "--keepalive" || key == "-k") {
-                    if (value.is_boolean() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["keepalive"].SetBool(value.get<bool>());
-                        }
-                    }
-                } else if (key == "--nicehash") {
-                    if (value.is_boolean() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
-                        const auto& pools = fullConfig["pools"].GetArray();
-                        if (!pools.Empty()) {
-                            auto& firstPool = pools[0];
-                            firstPool["nicehash"].SetBool(value.get<bool>());
-                        }
-                    }
-                }                
-                // Flere parametre kan tilføjes her
+    const nlohmann::json &args = message["ws_args"];
+    LOG_INFO("[WebSocket:INFO] Received set_ws_args");
+
+    const Config *config = m_controller->config();
+    if (!config) {
+        LOG_ERR("[WebSocket:ERR] Config missing in controller");
+        return;
+    }
+
+    rapidjson::Document doc;
+    doc.CopyFrom(config->toJSON(), doc.GetAllocator());
+    rapidjson::Document::AllocatorType &allocator = doc.GetAllocator();
+
+    // Modify pools[0] fields if they exist in args
+    if (doc.HasMember("pools") && doc["pools"].IsArray() && !doc["pools"].Empty()) {
+        rapidjson::Value &pool = doc["pools"][0];
+
+        for (auto it = args.begin(); it != args.end(); ++it) {
+            const std::string key = it.key();
+            const std::string val = it.value().get<std::string>();
+
+            std::string keyStripped = key;
+            if (keyStripped.rfind("--", 0) == 0) keyStripped = keyStripped.substr(2);
+            else if (keyStripped.rfind("-", 0) == 0) keyStripped = keyStripped.substr(1);
+
+            if (keyStripped == "url") {
+                pool["url"].SetString(val.c_str(), allocator);
+            }
+            else if (keyStripped == "user") {
+                pool["user"].SetString(val.c_str(), allocator);
+            }
+            else if (keyStripped == "pass") {
+                pool["pass"].SetString(val.c_str(), allocator);
+            }
+            else if (keyStripped == "algo") {
+                pool["algo"].SetString(val.c_str(), allocator);
+            }
+            else if (keyStripped == "rig-id") {
+                pool["rig-id"].SetString(val.c_str(), allocator);
+            }
+            else if (keyStripped == "tls") {
+                pool["tls"].SetBool(val == "true");
+            }
+            else if (keyStripped == "keepalive") {
+                pool["keepalive"].SetBool(val == "true");
+            }
+            else if (keyStripped == "nicehash") {
+                pool["nicehash"].SetBool(val == "true");
+            }
+            else {
+                LOG_INFO("[WebSocket:INFO] Unhandled key: %s", key.c_str());
             }
         }
-    
-        /**/
-        // Sammenlign originalConfig med fullConfig
-        rapidjson::StringBuffer originalBuffer;
-        rapidjson::Writer<rapidjson::StringBuffer> originalWriter(originalBuffer);
-        originalConfig.Accept(originalWriter);
-    
-        rapidjson::StringBuffer updatedBuffer;
-        rapidjson::Writer<rapidjson::StringBuffer> updatedWriter(updatedBuffer);
-        fullConfig.Accept(updatedWriter);
-    
-        //std::cout << "[CMD] Original config: " << originalBuffer.GetString() << std::endl;
-        //std::cout << "[CMD] Updated config: " << updatedBuffer.GetString() << std::endl;
 
-        if (std::string(originalBuffer.GetString()) != std::string(updatedBuffer.GetString())) {
-            //std::cout << "[CMD] Config has changed. Proceeding with reload.\n";
+        // Apply the updated JSON config
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        doc.Accept(writer);
 
-            LOG_INFO(WHITE_ON_GREY(" socket  ") " Config has changed. Proceeding with reload.");
-
-            // Kald reload med den opdaterede fullConfig
-            if (m_controller->reload(fullConfig)) {
-                LOG_INFO(WHITE_ON_GREY(" socket  ") " Config reloaded successfully.");
-            } else {
-                LOG_INFO(WHITE_ON_GREY(" socket  ") " Config reload failed.");
-            }
-        } else {
-            //std::cout << "[CMD] Config is identical. No reload needed.\n";
-        }
-       /**/
-  
-
-    } else {
-        LOG_INFO(WHITE_ON_GREY(" socket  ") " Unknown command.");
-    } 
+        LOG_INFO("[WebSocket:INFO] Reloading config with modified ws_args");
+        m_controller->reload(doc);
+    }
+    else {
+        LOG_ERR("[WebSocket:ERR] Invalid or missing 'pools' section in config");
+    }
 }
+
+} // namespace xmrig

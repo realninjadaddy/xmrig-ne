@@ -32,6 +32,7 @@ private:
     void setupHandlers();
     Controller *m_controller; // Gem en reference til Controller
     WebsocketCommandHandler *m_handler; // Pointer til handler
+    bool m_started { false };
 
     std::string m_url;
     std::string m_user;

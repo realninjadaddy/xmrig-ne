@@ -84,11 +84,11 @@ int xmrig::App::exec()
         }
         
         auto wsClient = std::make_unique<xmrig::WebsocketClient>(m_controller.get(), handler.get(), ws.url(), ws.user(), ws.secret());
-        wsClient->start();
-
-
         m_controller->network()->state()->setWebsocketClient(wsClient.get());
         m_controller->setWebsocketClient(std::move(wsClient));
+        m_controller->websocketClient()->start();  // <-- kald start() efter
+        
+
     }
 
     if (!m_controller->isBackground()) {
