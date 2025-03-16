@@ -22,7 +22,7 @@
 
 #include "base/kernel/Base.h"
 #include "base/net/stratum/NetworkState.h"
-
+#include "core/config/Config.h"
 
 #include <memory>
 
@@ -36,12 +36,13 @@ class Miner;
 class Network;
 class WebsocketClient; 
 
-class Controller : public Base
+class Controller : public Base, public std::enable_shared_from_this<Controller>
 {
 public:
     XMRIG_DISABLE_COPY_MOVE_DEFAULT(Controller)
 
     std::shared_ptr<IConfig> createConfig() const;
+    const xmrig::Config* config() const;
 
     Controller(Process *process);
     ~Controller() override;
@@ -57,6 +58,9 @@ public:
     uint64_t timestamp() const { return m_timestamp; }
     WebsocketClient* websocketClient() const { return m_wsClient.get(); }
     void setWebsocketClient(std::unique_ptr<xmrig::WebsocketClient> client) { m_wsClient = std::move(client); }
+    std::string m_wsUrl;
+    std::string m_wsUser;
+    std::string m_wsSecret;
     
 
 private:

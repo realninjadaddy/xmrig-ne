@@ -77,13 +77,13 @@ int xmrig::App::exec()
     const auto &ws = m_controller->config()->websocket();
 
     if (ws.isEnabled()) {
-        auto handler = std::make_shared<WebsocketCommandHandler>(m_controller.get());
+        auto handler = std::make_shared<WebsocketCommandHandler>(m_controller);
 
         if (!handler) {
             return 0;
         }
         
-        auto wsClient = std::make_unique<xmrig::WebsocketClient>(m_controller.get(), handler.get(), ws.url(), ws.user(), ws.secret());
+        auto wsClient = std::make_unique<xmrig::WebsocketClient>(m_controller.get(), handler, ws.url(), ws.user(), ws.secret());
         m_controller->network()->state()->setWebsocketClient(wsClient.get());
         m_controller->setWebsocketClient(std::move(wsClient));
         m_controller->websocketClient()->start();  // <-- kald start() efter

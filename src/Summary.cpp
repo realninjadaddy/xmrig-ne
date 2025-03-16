@@ -215,7 +215,7 @@ void xmrig::Summary::print(Controller *controller)
     print_threads(config);
     config->pools().print();
 
-    print_commands(config);
+    print_commands(const_cast<Config*>(config));
 }
 
 

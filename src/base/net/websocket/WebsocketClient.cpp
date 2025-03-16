@@ -16,7 +16,7 @@ using json = nlohmann::json;
 
 namespace xmrig {
 
-WebsocketClient::WebsocketClient(Controller *controller, WebsocketCommandHandler *handler,
+WebsocketClient::WebsocketClient(Controller *controller, std::shared_ptr<WebsocketCommandHandler> handler,
         const std::string &url, const std::string &user,
         const std::string &secret)
 : m_controller(controller), m_handler(handler), m_url(url), m_user(user), m_secret(secret)
@@ -61,6 +61,8 @@ void WebsocketClient::setupHandlers() {
             //std::cout << "[WS] Received: " << msg->str << "\n";
             try {
                 //std::cout << "[WS] msg->str: " << msg->str << std::endl;
+                //LOG_INFO("[WS DEBUG] msg ptr = %p", (void*)msg.get());
+                //LOG_INFO("[WS DEBUG] msg->str = %s", msg->str.c_str());
                 json data;
                 try {
                     data = json::parse(msg->str);

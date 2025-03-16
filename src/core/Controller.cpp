@@ -24,6 +24,7 @@
 #include "net/Network.h"
 #include <iostream>
 #include "base/net/websocket/WebsocketClient.h"
+#include "base/net/websocket/WebsocketCommandHandler.h"
 
 
 #ifdef XMRIG_FEATURE_API
@@ -65,6 +66,13 @@ int xmrig::Controller::init()
     api()->addListener(m_hwApi.get());
 #   endif
 
+m_wsClient = std::make_unique<WebsocketClient>(
+        this,
+        std::make_shared<WebsocketCommandHandler>(shared_from_this()),
+        m_wsUrl,
+        m_wsUser,
+        m_wsSecret
+    );
     return 0;
 }
 
@@ -115,4 +123,9 @@ void xmrig::Controller::execCommand(char command) const
 std::shared_ptr<xmrig::IConfig> xmrig::Controller::createConfig() const
 {
     return std::make_shared<Config>();
+}
+
+const xmrig::Config* xmrig::Controller::config() const
+{
+    return static_cast<const xmrig::Config*>(Base::config());
 }

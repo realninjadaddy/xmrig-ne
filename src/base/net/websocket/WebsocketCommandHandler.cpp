@@ -1,101 +1,328 @@
 #include "base/net/websocket/WebsocketCommandHandler.h"
 #include "core/Controller.h"
-#include "3rdparty/rapidjson/document.h"
+#include "base/io/log/Log.h"
 #include "3rdparty/rapidjson/stringbuffer.h"
 #include "3rdparty/rapidjson/writer.h"
-#include "base/io/json/Json.h"
-#include "base/net/stratum/Pool.h"
-#include "base/net/stratum/Pools.h"
-#include <nlohmann/json.hpp>
-#include <iostream>
-#include "base/io/log/Log.h"
-#include "core/config/Config.h"
+
+using json = nlohmann::json;  // 👈 Denne linje tilføjes her
 
 namespace xmrig {
 
-WebsocketCommandHandler::WebsocketCommandHandler(Controller *controller)
-    : m_controller(controller)
-{
-}
+WebsocketCommandHandler::WebsocketCommandHandler(std::shared_ptr<Controller> controller)
+    : m_controller(std::move(controller))
+{}
 
 WebsocketCommandHandler::~WebsocketCommandHandler() = default;
 
-void WebsocketCommandHandler::handleArgs(const nlohmann::json &message) {
-    if (!message.is_object()) {
-        LOG_ERR("[WebSocket:ERR] Invalid args payload (not an object)");
+void WebsocketCommandHandler::handleArgs(const json &args)
+{
+    if (!m_controller) {
         return;
     }
 
-    if (!message.contains("ws_args") || !message["ws_args"].is_object()) {
-        LOG_ERR("[WebSocket:ERR] Missing or invalid 'ws_args'");
-        return;
-    }
+    if (args.contains("type") && args["type"] == "set_ws_args") {
+        rapidjson::Document fullConfig;
+        m_controller->config()->getJSON(fullConfig);  // 💯 korrekt og komplet
 
-    const nlohmann::json &args = message["ws_args"];
-    LOG_INFO("[WebSocket:INFO] Received set_ws_args");
+        auto& allocator = fullConfig.GetAllocator();
 
-    const Config *config = m_controller->config();
-    if (!config) {
-        LOG_ERR("[WebSocket:ERR] Config missing in controller");
-        return;
-    }
+        //LOG_INFO("Has cpu: %s", fullConfig.HasMember("cpu") ? "yes" : "no");
+        //LOG_INFO("Has randomx: %s", fullConfig.HasMember("randomx") ? "yes" : "no");
 
-    rapidjson::Document doc;
-    doc.CopyFrom(config->toJSON(), doc.GetAllocator());
-    rapidjson::Document::AllocatorType &allocator = doc.GetAllocator();
+        rapidjson::Document originalConfig;
+        originalConfig.CopyFrom(fullConfig, fullConfig.GetAllocator());
 
-    // Modify pools[0] fields if they exist in args
-    if (doc.HasMember("pools") && doc["pools"].IsArray() && !doc["pools"].Empty()) {
-        rapidjson::Value &pool = doc["pools"][0];
+        if (args.contains("ws_args") && args["ws_args"].is_object()) {
+            if (args["ws_args"].empty()) {
+                LOG_INFO(WHITE_ON_GREY(" socket  ") "Received empty ws_args – skipping reload.");
+                return;
+            }
 
-        for (auto it = args.begin(); it != args.end(); ++it) {
-            const std::string key = it.key();
-            const std::string val = it.value().get<std::string>();
+            //LOG_INFO(WHITE_ON_GREY(" socket  "), "Received ws_args:");
 
-            std::string keyStripped = key;
-            if (keyStripped.rfind("--", 0) == 0) keyStripped = keyStripped.substr(2);
-            else if (keyStripped.rfind("-", 0) == 0) keyStripped = keyStripped.substr(1);
+            for (const auto& item : args["ws_args"].items()) {
+                const auto& key = item.key();
+                const auto& value = item.value();
 
-            if (keyStripped == "url") {
-                pool["url"].SetString(val.c_str(), allocator);
-            }
-            else if (keyStripped == "user") {
-                pool["user"].SetString(val.c_str(), allocator);
-            }
-            else if (keyStripped == "pass") {
-                pool["pass"].SetString(val.c_str(), allocator);
-            }
-            else if (keyStripped == "algo") {
-                pool["algo"].SetString(val.c_str(), allocator);
-            }
-            else if (keyStripped == "rig-id") {
-                pool["rig-id"].SetString(val.c_str(), allocator);
-            }
-            else if (keyStripped == "tls") {
-                pool["tls"].SetBool(val == "true");
-            }
-            else if (keyStripped == "keepalive") {
-                pool["keepalive"].SetBool(val == "true");
-            }
-            else if (keyStripped == "nicehash") {
-                pool["nicehash"].SetBool(val == "true");
-            }
-            else {
-                LOG_INFO("[WebSocket:INFO] Unhandled key: %s", key.c_str());
+                if (key == "--url" || key == "-o") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["url"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
+                        }
+                    }
+                } 
+                else if (key == "--user" || key == "-u") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["user"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
+                        }
+                    }
+                } 
+                else if (key == "--algo" || key == "-a") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["algo"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
+                        }
+                    }
+                } 
+                else if (key == "--pass" || key == "-p") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["pass"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
+                        }
+                    }
+                } 
+                else if (key == "--tls") {
+                    if (value.is_boolean() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["tls"].SetBool(value.get<bool>());
+                        }
+                    }
+                } 
+                else if (key == "--tls-fingerprint") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["tls-fingerprint"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
+                        }
+                    }
+                } 
+                else if (key == "--coin") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["coin"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
+                        }
+                    }
+                } 
+                else if (key == "--rig-id") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["rig-id"].SetString(value.get<std::string>().c_str(), fullConfig.GetAllocator());
+                        }
+                    }
+                } 
+                else if (key == "--keepalive" || key == "-k") {
+                    if (value.is_boolean() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["keepalive"].SetBool(value.get<bool>());
+                        }
+                    }
+                } 
+                else if (key == "--nicehash") {
+                    if (value.is_boolean() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["nicehash"].SetBool(value.get<bool>());
+                        }
+                    }
+                }
+                else if (key == "--userpass" || key == "-O") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            std::string creds = value.get<std::string>();
+                            size_t delim = creds.find(':');
+                            if (delim != std::string::npos) {
+                                std::string user = creds.substr(0, delim);
+                                std::string pass = creds.substr(delim + 1);
+                                pools[0]["user"].SetString(user.c_str(), allocator);
+                                pools[0]["pass"].SetString(pass.c_str(), allocator);
+                            }
+                        }
+                    }
+                }
+                else if (key == "--proxy" || key == "-x") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["socks5"].SetString(value.get<std::string>().c_str(), allocator);
+                        }
+                    }
+                }
+                else if (key == "--self-select") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["self-select"].SetString(value.get<std::string>().c_str(), allocator);
+                        }
+                    }
+                }
+                else if (key == "--submit-to-origin") {
+                    if (value.is_boolean() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["submit-to-origin"].SetBool(value.get<bool>());
+                        }
+                    }
+                }
+                else if (key == "--retries" || key == "-r") {
+                    if (value.is_number_integer() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["retries"].SetInt(value.get<int>());
+                        }
+                    }
+                }
+                else if (key == "--retry-pause" || key == "-R") {
+                    if (value.is_number_integer() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["retry-pause"].SetInt(value.get<int>());
+                        }
+                    }
+                }
+                else if (key == "--user-agent") {
+                    if (value.is_string() && fullConfig.HasMember("pools") && fullConfig["pools"].IsArray()) {
+                        auto& pools = fullConfig["pools"];
+                        if (!pools.Empty()) {
+                            pools[0]["user-agent"].SetString(value.get<std::string>().c_str(), allocator);
+                        }
+                    }
+                }
+                else if (key == "--donate-level") {
+                    if (value.is_number_integer()) {
+                        fullConfig["donate-level"].SetInt(value.get<int>());
+                    }
+                }
+                else if (key == "--donate-over-proxy") {
+                    if (value.is_number_integer()) {
+                        fullConfig["donate-over-proxy"].SetInt(value.get<int>());
+                    }
+                }                                                                                                                                
+                else if (key == "--no-cpu") {
+                    fullConfig["cpu"]["enabled"].SetBool(false);
+                }
+                else if (key == "--threads" || key == "-t") {
+                    if (value.is_number_unsigned()) {
+                        fullConfig["cpu"]["threads"].SetUint(value.get<uint32_t>());
+                    }
+                }
+                else if (key == "--cpu-affinity") {
+                    if (value.is_string()) {
+                        std::string s = value.get<std::string>();
+                        std::istringstream ss(s);
+                        std::string token;
+                
+                        rapidjson::Value affinity(rapidjson::kArrayType);
+                
+                        while (std::getline(ss, token, ',')) {
+                            try {
+                                uint32_t cpu = std::stoul(token);
+                                affinity.PushBack(cpu, allocator);
+                            } catch (...) {
+                                LOG_ERR("[WS] Invalid cpu-affinity value: %s", token.c_str());
+                            }
+                        }
+                
+                        fullConfig["cpu"]["affinity"] = affinity;
+                        //LOG_INFO("[WS] Set cpu.affinity with %zu entries", affinity.Size());
+                    }
+                }
+                else if (key == "--cpu-priority") {
+                    if (value.is_number_integer()) {
+                        fullConfig["cpu"]["priority"].SetInt(value.get<int>());
+                    }
+                }
+                else if (key == "--cpu-max-threads-hint") {
+                    if (value.is_number_integer()) {
+                        fullConfig["cpu"]["max-threads-hint"].SetInt(value.get<int>());
+                    }
+                }
+                else if (key == "--cpu-memory-pool") {
+                    if (value.is_number_integer()) {
+                        fullConfig["cpu"]["mem-pool"].SetInt(value.get<int>());
+                    }
+                }
+                else if (key == "--cpu-no-yield") {
+                    fullConfig["cpu"]["yield"].SetBool(false);
+                }
+                else if (key == "--no-huge-pages") {
+                    fullConfig["cpu"]["huge-pages"].SetBool(false);
+                }
+                else if (key == "--hugepage-size") {
+                    if (value.is_number_integer()) {
+                        fullConfig["cpu"]["huge-page-size"].SetInt(value.get<int>());
+                    }
+                }
+                else if (key == "--huge-pages-jit") {
+                    fullConfig["cpu"]["huge-pages-jit"].SetBool(true);
+                }
+                else if (key == "--asm") {
+                    if (value.is_string()) {
+                        fullConfig["cpu"]["asm"].SetString(value.get<std::string>().c_str(), allocator);
+                    }
+                }
+                else if (key == "--randomx-init") {
+                    if (value.is_number_integer()) {
+                        fullConfig["randomx"]["init"].SetInt(value.get<int>());
+                    }
+                }
+                else if (key == "--randomx-no-numa") {
+                    fullConfig["randomx"]["numa"].SetBool(false);
+                }
+                else if (key == "--randomx-mode") {
+                    if (value.is_null() || (value.is_boolean() && !value.get<bool>())) {
+                        fullConfig["randomx"].RemoveMember("mode");
+                        LOG_INFO(WHITE_ON_GREY(" socket  ") "  Removed randomx.mode → fallback to auto");
+                    }
+                    else if (value.is_string()) {
+                        const std::string mode = value.get<std::string>();
+                        if (mode == "auto" || mode == "fast" || mode == "light") {
+                            fullConfig["randomx"]["mode"].SetString(mode.c_str(), allocator);
+                        }
+                        else {
+                            LOG_ERR(WHITE_ON_GREY(" socket  ") " Invalid randomx-mode: %s", mode.c_str());
+                        }
+                    }
+                }
+                else if (key == "--randomx-1gb-pages") {
+                    fullConfig["randomx"]["1gb-pages"].SetBool(value.get<bool>());
+                }
+                else if (key == "--randomx-wrmsr") {
+                    if (value.is_number_integer()) {
+                        fullConfig["randomx"]["wrmsr"].SetInt(value.get<int>());
+                    }
+                }
+                else if (key == "--randomx-no-rdmsr") {
+                    fullConfig["randomx"]["rdmsr"].SetBool(false);
+                }
+                else if (key == "--randomx-cache-qos") {
+                    fullConfig["randomx"]["cache-qos"].SetBool(true);
+                }
+
             }
         }
 
-        // Apply the updated JSON config
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        doc.Accept(writer);
+        rapidjson::StringBuffer originalBuffer;
+        rapidjson::Writer<rapidjson::StringBuffer> originalWriter(originalBuffer);
+        originalConfig.Accept(originalWriter);
 
-        LOG_INFO("[WebSocket:INFO] Reloading config with modified ws_args");
-        m_controller->reload(doc);
-    }
-    else {
-        LOG_ERR("[WebSocket:ERR] Invalid or missing 'pools' section in config");
+        rapidjson::StringBuffer updatedBuffer;
+        rapidjson::Writer<rapidjson::StringBuffer> updatedWriter(updatedBuffer);
+        fullConfig.Accept(updatedWriter);
+
+        if (std::string(originalBuffer.GetString()) != std::string(updatedBuffer.GetString())) {
+            LOG_INFO(WHITE_ON_GREY(" socket  ") " Config has changed. Proceeding with reload.");
+            if (m_controller->reload(fullConfig)) {
+                LOG_INFO(WHITE_ON_GREY(" socket  ") " Config reloaded successfully.");
+            } else {
+                LOG_ERR("WebSocket" "Config reload failed.");
+            }
+        } else {
+            LOG_INFO(WHITE_ON_GREY(" socket  ") " Config is identical. No reload needed.");
+        }
+    } else {
+        LOG_INFO(WHITE_ON_GREY(" socket  ") " Unknown command.");
     }
 }
+
 
 } // namespace xmrig

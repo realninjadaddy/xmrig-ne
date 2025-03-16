@@ -12,9 +12,9 @@ class Controller; // Fremad-deklaration
 class WebsocketCommandHandler;
 class WebsocketClient {
 public:
-WebsocketClient(Controller *controller, WebsocketCommandHandler *handler,
-    const std::string &url, const std::string &user = {},
-    const std::string &secret = {});
+WebsocketClient(Controller *controller, std::shared_ptr<WebsocketCommandHandler> handler,
+    const std::string &url, const std::string &user, const std::string &secret);
+
 ~WebsocketClient();
 
     void start();
@@ -31,9 +31,9 @@ WebsocketClient(Controller *controller, WebsocketCommandHandler *handler,
 private:
     void setupHandlers();
     Controller *m_controller; // Gem en reference til Controller
-    WebsocketCommandHandler *m_handler; // Pointer til handler
+    std::shared_ptr<WebsocketCommandHandler> m_handler;
     bool m_started { false };
-
+    
     std::string m_url;
     std::string m_user;
     std::string m_secret;
