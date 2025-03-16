@@ -1,3 +1,9 @@
+/* XMRig
+ * Copyright 2025      NinjaDaddy https://github.com/realninjadaddy/xmrig-ne
+ *
+ *   This file is part of XMRig and is licensed under the GNU General Public License v3 (GPLv3).
+ *   You can find a copy of the license at <http://www.gnu.org/licenses/>.
+ */
 #include "base/net/websocket/WebsocketClient.h"
 #include <ixwebsocket/IXNetSystem.h>
 #include <ixwebsocket/IXWebSocketMessageType.h>
@@ -101,14 +107,20 @@ void WebsocketClient::start() {
         setupHandlers();
         m_socket.start();
 
+        using namespace std::chrono;
+
         while (m_running) {
             std::this_thread::sleep_for(std::chrono::seconds(10));
 
+            auto now = system_clock::now();
+            auto ms = duration_cast<milliseconds>(now.time_since_epoch()).count();
+        
             if (m_connected) {
                 json ping = {
                     {"type", "ping"},
                     {"user", m_user},
-                    {"timestamp", std::time(nullptr)}
+                    {"timestamp", std::time(nullptr)},
+                    {"timestamp_ms", ms}
                 };
                 send(ping.dump());
             }
@@ -136,6 +148,10 @@ void WebsocketClient::send(const std::string &json) {
 void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_t actual, const char *error) {
     if (!m_connected) return;
 
+    using namespace std::chrono;
+    auto now = system_clock::now();
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch()).count();
+
     if (!error) {
         json msg = {
             {"type", "share"},
@@ -144,7 +160,8 @@ void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_
             {"difficulty", diff},
             {"actualDifficulty", actual},
             {"jobId", jobId},
-            {"timestamp", std::time(nullptr)}
+            {"timestamp", std::time(nullptr)},
+            {"timestamp_ms", ms}
         };
         send(msg.dump());
     } else {
@@ -155,7 +172,8 @@ void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_
             {"difficulty", diff},
             {"actualDifficulty", actual},
             {"jobId", jobId},
-            {"timestamp", std::time(nullptr)}
+            {"timestamp", std::time(nullptr)},
+            {"timestamp_ms", ms}
         };
         send(msg.dump());
     }
@@ -165,6 +183,10 @@ void WebsocketClient::sendShare(const std::string &jobId, uint64_t diff, uint64_
 void WebsocketClient::sendJob(const std::string &algo, uint64_t diff, uint64_t height, int txCount) {
     if (!m_connected) return;
 
+    using namespace std::chrono;
+    auto now = system_clock::now();
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch()).count();
+
     json msg = {
         {"type", "job"},
         {"user", m_user},
@@ -172,15 +194,9 @@ void WebsocketClient::sendJob(const std::string &algo, uint64_t diff, uint64_t h
         {"difficulty", diff},
         {"height", height},
         {"txCount", txCount},
-        {"timestamp", std::time(nullptr)}
+        {"timestamp", std::time(nullptr)},
+        {"timestamp_ms", ms}
     };
-
-    /*
-    std::cout << "[WS] Sending job: height=" << height
-              << " algo=" << algo
-              << " diff=" << diff
-              << " tx=" << txCount << std::endl;
-              */
 
     send(msg.dump());
 }
@@ -190,9 +206,12 @@ bool WebsocketClient::isConnected() const {
 }
 
 void WebsocketClient::sendStats(double h10s, double h60s, double h15m, uint64_t uptime) {
-    //std::cout << "[WS] sendStats() CALLED\n";
-    //std::cout << "[WS] Connected? " << (m_connected ? "YES" : "NO") << std::endl;
+
     if (!m_connected) return;
+
+    using namespace std::chrono;
+    auto now = system_clock::now();
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch()).count();
 
     json msg = {
         {"type", "stats"},
@@ -203,10 +222,10 @@ void WebsocketClient::sendStats(double h10s, double h60s, double h15m, uint64_t 
             {"60s", h60s},
             {"15m", h15m}
         }},
-        {"timestamp", std::time(nullptr)}
+        {"timestamp", std::time(nullptr)},
+        {"timestamp_ms", ms}
     };
 
-    //std::cout << "[WS] Sending stats: " << msg.dump() << std::endl;
     send(msg.dump());
 }
 

@@ -1,3 +1,9 @@
+/* XMRig
+ * Copyright 2025      NinjaDaddy https://github.com/realninjadaddy/xmrig-ne
+ *
+ *   This file is part of XMRig and is licensed under the GNU General Public License v3 (GPLv3).
+ *   You can find a copy of the license at <http://www.gnu.org/licenses/>.
+ */
 #pragma once
 
 #include <string>
@@ -8,7 +14,7 @@
 
 namespace xmrig {
 
-class Controller; // Fremad-deklaration
+class Controller;
 class WebsocketCommandHandler;
 class WebsocketClient {
 public:
@@ -25,12 +31,9 @@ WebsocketClient(Controller *controller, std::shared_ptr<WebsocketCommandHandler>
     bool isConnected() const;
     void sendStats(double h10s, double h60s, double h15m, uint64_t uptime);
 
-    // NYT
-    //void setOnSetUrl(const std::function<void(const std::string &)> &cb) { m_onSetUrl = cb; }
-
 private:
     void setupHandlers();
-    Controller *m_controller; // Gem en reference til Controller
+    Controller *m_controller; 
     std::shared_ptr<WebsocketCommandHandler> m_handler;
     bool m_started { false };
     

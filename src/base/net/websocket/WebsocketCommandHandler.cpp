@@ -1,8 +1,15 @@
+/* XMRig
+ * Copyright 2025      NinjaDaddy https://github.com/realninjadaddy/xmrig-ne
+ *
+ *   This file is part of XMRig and is licensed under the GNU General Public License v3 (GPLv3).
+ *   You can find a copy of the license at <http://www.gnu.org/licenses/>.
+ */
 #include "base/net/websocket/WebsocketCommandHandler.h"
 #include "core/Controller.h"
 #include "base/io/log/Log.h"
 #include "3rdparty/rapidjson/stringbuffer.h"
 #include "3rdparty/rapidjson/writer.h"
+#include <iostream>
 
 using json = nlohmann::json;  // 👈 Denne linje tilføjes her
 
@@ -202,7 +209,12 @@ void WebsocketCommandHandler::handleArgs(const json &args)
                 }
                 else if (key == "--threads" || key == "-t") {
                     if (value.is_number_unsigned()) {
-                        fullConfig["cpu"]["threads"].SetUint(value.get<uint32_t>());
+                        fullConfig["cpu"]["*"]["threads"].SetUint(value.get<uint32_t>());
+                    }
+                }
+                else if (key == "--intensity") {
+                    if (value.is_number_unsigned()) {
+                        fullConfig["cpu"]["*"]["intensity"].SetUint(value.get<uint32_t>());
                     }
                 }
                 else if (key == "--cpu-affinity") {
@@ -222,7 +234,7 @@ void WebsocketCommandHandler::handleArgs(const json &args)
                             }
                         }
                 
-                        fullConfig["cpu"]["affinity"] = affinity;
+                        fullConfig["cpu"]["*"]["affinity"] = affinity;
                         //LOG_INFO("[WS] Set cpu.affinity with %zu entries", affinity.Size());
                     }
                 }
@@ -257,7 +269,7 @@ void WebsocketCommandHandler::handleArgs(const json &args)
                 }
                 else if (key == "--asm") {
                     if (value.is_string()) {
-                        fullConfig["cpu"]["asm"].SetString(value.get<std::string>().c_str(), allocator);
+                        fullConfig["cpu"]["*"]["asm"].SetString(value.get<std::string>().c_str(), allocator);
                     }
                 }
                 else if (key == "--randomx-init") {
@@ -308,7 +320,9 @@ void WebsocketCommandHandler::handleArgs(const json &args)
         rapidjson::StringBuffer updatedBuffer;
         rapidjson::Writer<rapidjson::StringBuffer> updatedWriter(updatedBuffer);
         fullConfig.Accept(updatedWriter);
-
+        //std::cout << "[DEBUG] originalConfig:\n" << originalBuffer.GetString() << std::endl;
+        //std::cout << "[DEBUG] fullConfig:\n" << updatedBuffer.GetString() << std::endl;
+        
         if (std::string(originalBuffer.GetString()) != std::string(updatedBuffer.GetString())) {
             LOG_INFO(WHITE_ON_GREY(" socket  ") " Config has changed. Proceeding with reload.");
             if (m_controller->reload(fullConfig)) {
